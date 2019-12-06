@@ -16,6 +16,15 @@ Shapes = "175de200-b73b-11e9-28b7-9b5b306cec37"
 UniversalLogger = "5c5e3362-9445-4819-9f95-51c44c51adeb"
 
 [compat]
+IJulia = "1.20.2"
+Lyceum = "0.1"
+LyceumAI = "0.1"
+LyceumBase = "0.1"
+LyceumMuJoCo = "0.1"
+MuJoCo = "0.1"
+Plots = "0.28.2"
+Shapes = "0.1"
+UniversalLogger = "0.1"
 julia = "1.3"
 
 [extras]
