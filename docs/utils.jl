@@ -2,18 +2,18 @@ isliterate(file) = (@assert isfile(file); endswith(file, ".jl"))
 ismarkdown(file) = (@assert isfile(file); endswith(file, ".md"))
 
 # For process_literate and process_markdown, full path to srcfile is joinpath(root, rel_srcfile)
-function process_literate(root, rel_srcfile, markdowndir, scriptdir, notebookdir)
+function process_literate(root, rel_srcfile, srcdir, markdowndir, scriptdir, notebookdir)
     abs_srcfile = joinpath(root, rel_srcfile)
     rel_srcdir = dirname(rel_srcfile)
 
     @assert isdir(root)
     @assert isliterate(abs_srcfile)
 
+    # Copy over source file and use that file instead for correct EditURL
+    abs_srcfile = cp(abs_srcfile, joinpath(srcdir, basename(abs_srcfile)))
+
     markdown_dstdir = joinpath(markdowndir, rel_srcdir)
     mkpath(markdown_dstdir)
-    # Copy over source file and use that file instead for correct EditURL
-    abs_srcfile = cp(abs_srcfile, joinpath(markdown_dstdir, basename(abs_srcfile)))
-    @error abs_srcfile relpath(abs_srcfile, markdown_dstdir)
     Literate.markdown(abs_srcfile, markdown_dstdir; documenter = true)
 
     script_dstdir = joinpath(scriptdir, rel_srcdir)
@@ -128,15 +128,6 @@ function print_pages(index, indent=0)
     end
 end
 
-function headerprintln(x::AbstractString)
-    if length(x) > 78
-        println(x)
-    else
-        d, r = divrem(78 - length(x), 2)
-        println(repeat('-', d), " ", x, " ", repeat('-', d+r))
-    end
-end
-
 function lowercaseify!(srcdir)
     @assert isdir(srcdir)
     mktempdir() do tmpdir
@@ -151,60 +142,3 @@ function lowercaseify!(srcdir)
         cp(tmpdir, srcdir)
     end
 end
-
-
-function create_example_project(dst_example_dir)
-    # copy project skeleton over and setup project/manifest
-    DevTools.cpinto(EXAMPLE_DIR, dst_example_dir)
-    example_project = Dict{String, Any}()
-    example_manifest = Dict{String, Any}()
-    example_project["name"] = basename(dst_example_dir)
-    example_project["uuid"] = EXAMPLE_UUID
-
-    lyceum_project = Pkg.TOML.parsefile(joinpath(REPO_DIR, "Project.toml"))
-    lyceum_manifest = Pkg.TOML.parsefile(joinpath(REPO_DIR, "Manifest.toml"))
-    docs_project = Pkg.TOML.parsefile(joinpath(DOCS_DIR, "Project.toml"))
-    docs_manifest = Pkg.TOML.parsefile(joinpath(DOCS_DIR, "Manifest.toml"))
-
-    # sync with Lyceum
-    example_project["version"] = lyceum_project["version"]
-    example_project["deps"] = lyceum_project["deps"]
-    example_project["compat"] = lyceum_project["compat"]
-
-    # sync with example-specific deps from docs
-    @assert !haskey(lyceum_project["deps"], "IJulia")
-    @assert !haskey(lyceum_project["compat"], "IJulia")
-    @assert !haskey(lyceum_project["deps"], "Plots")
-    @assert !haskey(lyceum_project["compat"], "Plots")
-    example_project["deps"]["IJulia"] = docs_project["deps"]["IJulia"]
-    example_project["deps"]["Plots"] = docs_project["deps"]["Plots"]
-    example_project["compat"]["IJulia"] = docs_project["compat"]["IJulia"]
-    example_project["compat"]["Plots"] = docs_project["compat"]["Plots"]
-
-    @assert length(docs_manifest["IJulia"]) == length(docs_manifest["Plots"]) == 1
-    ijulia_ver = first(docs_manifest["IJulia"])["version"]
-    plots_ver = first(docs_manifest["Plots"])["version"]
-
-    # write project/manifest, overwriting if they exist
-    open(joinpath(dst_example_dir, "Project.toml"), "w") do io
-        Pkg.TOML.print(io, example_project)
-    end
-    open(joinpath(dst_example_dir, "Manifest.toml"), "w") do io
-        Pkg.TOML.print(io, example_manifest)
-    end
-
-    # resolve Manifest
-    oldproj = Base.active_project()
-    olddir = pwd()
-    try
-        cd(dst_example_dir)
-        Pkg.activate()
-        Pkg.add([PackageSpec(name="IJulia", version=ijulia_ver), PackageSpec(name="Plots", version=plots_ver)])
-        Pkg.instantiate()
-    finally
-        cd(olddir)
-        Pkg.activate(oldproj)
-    end
-end
-
-

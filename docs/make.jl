@@ -9,12 +9,11 @@ const SRC_DIR = joinpath(DOCS_DIR, "src")
 const ASSETS_DIR = joinpath(DOCS_DIR, "assets")
 const OUTPUT_DIR = joinpath(DOCS_DIR, "output")
 
-const EXAMPLE_DIR = joinpath(@__DIR__, "assets/LyceumExamples")
-const EXAMPLE_UUID = "208cb147-aad3-4bdb-b918-25b9ecee4332"
 
 const NAME_REGEX = r"^([0-9]+)-(.+)"
 
 include("utils.jl")
+include("examples.jl")
 include("package_definition.jl")
 
 function setup_output_dir(clean)
@@ -28,6 +27,7 @@ function setup_output_dir(clean)
     static = mkpath(joinpath(src, "static"))
     (
         src = src,
+        static = static,
         example = mkpath(joinpath(static, basename(EXAMPLE_DIR))),
         markdown = src,
         script = mkpath(joinpath(static, "script")),
@@ -35,17 +35,15 @@ function setup_output_dir(clean)
     )
 end
 
-
 function main(clean=true;kwargs...)
     paths = setup_output_dir(clean)
 
     #create_example_project(paths.example)
 
-    headerprintln("Pre-processing Files")
+    @info "Pre-processing Files"
     process_dir(SRC_DIR, ".", paths.markdown, paths.script, paths.notebook)
 
-    println()
-    headerprintln("Generating Page Index")
+    @info "Generating Page Index"
     @info relpath(paths.markdown, paths.src)
     pages = build_pages(paths.src, relpath(paths.markdown, paths.src))
 
@@ -57,7 +55,7 @@ function main(clean=true;kwargs...)
     pages[1] = Pair(title, joinpath(dirname(relpath(index_path, paths.src)), "index.md"))
     print_pages(pages)
 
-    headerprintln("Generating Docs")
+    @info "Generating Docs"
     makedocs(;
         #modules = [Lyceum, Lyceum.LYCEUM_PACKAGES...],
         format=Documenter.HTML(
@@ -75,9 +73,9 @@ function main(clean=true;kwargs...)
     )
 
     println()
-    headerprintln("Deploying")
+    @info "Deploying"
     deploydocs(
-        repo = "github.com/Lyceum/Lyceum.jl.git",
+        repo = "github.com/Lyceum/LyceumDocs.jl.git",
         push_preview=true,
         root = OUTPUT_DIR,
     )
