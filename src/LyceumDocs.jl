@@ -80,7 +80,7 @@ function make(; clean::Bool=false, builds::TupleN{Symbol} = BUILDS)
 
         # source/build are specified relative to root
         root = STAGING.dir,
-        strict = false,
+        strict = !islocalbuild(),
         #repo = "https://github.com/tkf/Transducers.jl/blob/{commit}{path}#L{line}",
     )
 

@@ -10,11 +10,10 @@ function process_dir(root::AbsStr, rel_dir::AbsStr; builds::TupleN{Symbol} = BUI
         idtitle = parse_filename(rel_path)
 
         if shouldskip(abs_path)
-            @debug "Skipping $abs_path: matches $SKIP_REGEX"
+            @warn "Skipping $abs_path: matches $SKIP_REGEX"
             continue
         elseif isnothing(idtitle)
-            @warn "Skipping $abs_path: does not match $NAME_REGEX"
-            continue
+            error("Bad name \"$idtitle\": does not match $NAME_REGEX")
         else
             id, title = idtitle
             if id in seen
@@ -124,11 +123,10 @@ function build_pages(root::AbsStr, rel_dir::AbsStr)
         idtitle = parse_filename(rel_path)
 
         if shouldskip(abs_path)
-            @debug "Skipping $abs_path: matches $SKIP_REGEX"
+            @warn "Skipping $abs_path: matches $SKIP_REGEX"
             continue
         elseif isnothing(idtitle)
-            @warn "Skipping index entry $idtitle: does not match $NAME_REGEX"
-            continue
+            error("Bad name \"$idtitle\": does not match $NAME_REGEX")
         else
             id, title = idtitle
         end
