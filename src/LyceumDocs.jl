@@ -46,7 +46,7 @@ include("examples.jl")
 include("package_definition.jl")
 
 
-function main(; clean::Bool=false, builds::TupleN{Symbol} = BUILDS)
+function make(; clean::Bool=false, builds::TupleN{Symbol} = BUILDS)
     if isdir(STAGING.dir) && clean
         @info "Cleaning staging dir ($(STAGING.dir))"
         rm(STAGING.dir, recursive=true, force=true)
