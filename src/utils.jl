@@ -7,7 +7,7 @@ function process_dir(root::AbsStr, rel_dir::AbsStr; builds::TupleN{Symbol} = BUI
     for path in readdir(abs_dir)
         abs_path = normpath(joinpath(abs_dir, path))
         rel_path = normpath(joinpath(rel_dir, path))
-        idtitle = parse_filename(abs_path, rel_path)
+        idtitle = parse_filename(rel_path)
 
         if shouldskip(abs_path)
             @debug "Skipping $abs_path: matches $SKIP_REGEX"
@@ -95,11 +95,11 @@ shouldskip(path) = !isnothing(match(SKIP_REGEX, path))
 ismarkdown(file) = (@assert isfile(file); endswith(file, ".md"))
 isliterate(file) = (@assert isfile(file); endswith(file, ".jl"))
 
-function parse_filename(abs_path, filename)
-    if filename == "index.md"
+function parse_filename(rel_path)
+    if rel_path == "index.md"
         id, title = -1, "Home"
     else
-        m = match(NAME_REGEX, basename(filename))
+        m = match(NAME_REGEX, basename(rel_path))
         if isnothing(m)
             return nothing
         else
@@ -121,7 +121,7 @@ function build_pages(root::AbsStr, rel_dir::AbsStr)
     for file_or_dir in readdir(abs_dir)
         abs_path = normpath(joinpath(abs_dir, file_or_dir))
         rel_path = normpath(joinpath(rel_dir, file_or_dir))
-        idtitle = parse_filename(abs_path, rel_path)
+        idtitle = parse_filename(rel_path)
 
         if shouldskip(abs_path)
             @debug "Skipping $abs_path: matches $SKIP_REGEX"
@@ -166,18 +166,3 @@ function print_pages(index, indent=0)
         end
     end
 end
-
-
-function lowercaseify!(srcdir)
-    isdir(srcdir) || error("Expected a directory, got: $srcdir")
-    for (root, dirs, files) in walkdir(srcdir)
-        foreach(d->_lowercaseify!(root, d), dirs)
-        foreach(f->_lowercaseify!(root, f), files)
-    end
-end
-
-function _lowercaseify!(root, rel_srcpath)
-    rel_dstpath = lowercase(rel_srcpath)
-    Base.rename(joinpath(root, rel_srcpath), joinpath(root, rel_dstpath))
-end
-

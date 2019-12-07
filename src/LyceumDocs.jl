@@ -12,7 +12,6 @@ const DOCSRC_DIR = joinpath(DOCS_DIR, "src")
 const ASSETS_DIR = joinpath(DOCS_DIR, "assets")
 
 const EXAMPLE_DIR = joinpath(DOCS_DIR, "assets/LyceumExamples")
-const EXAMPLE_UUID = "208cb147-aad3-4bdb-b918-25b9ecee4332"
 
 const BUILD_DIR = joinpath(REPO_DIR, "build")
 const BUILDS = (:documenter, :markdown, :script, :notebook)
@@ -30,11 +29,8 @@ const STAGING = begin
         dir=dir,
         src = src,
         static = static,
-        script = joinpath(static, "script"),
-        notebook = joinpath(static, "notebook"),
-        examples=examples,
-        examples_script = joinpath(examples, "script"),
-        examples_notebook = joinpath(examples, "notebook"),
+        script = joinpath(static, "scripts"),
+        notebook = joinpath(static, "notebooks"),
         examples_tarfile = joinpath(static, "examples.tar.gz")
     )
 end
@@ -69,7 +65,6 @@ function make(; clean::Bool=false, builds::TupleN{Symbol} = BUILDS)
 
     println()
     @info "Bundling examples"
-    create_example_project(STAGING.examples)
     bundle_examples()
 
     println()
