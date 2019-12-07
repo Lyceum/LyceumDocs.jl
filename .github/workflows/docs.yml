@@ -26,11 +26,10 @@ jobs:
           julia --color=yes --project -e 'using Pkg; Registry.add(RegistrySpec(url="https://github.com/Lyceum/LyceumRegistry.git"))'
           julia --color=yes --project -e 'using Pkg; Registry.add(RegistrySpec(url="https://github.com/JuliaRegistries/General.git"))'
         shell: bash
-      - name: Install dependencies
-        run: julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+      - uses: julia-actions/julia-buildpkg@master
       - name: Build and deploy
         env:
           MUJOCOJL_TEST_KEY: ${{ secrets.MUJOCOJL_TEST_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # For authentication with GitHub Actions token
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
-        run: julia --project=docs/ docs/make.jl
+        run: julia --project -e 'using LyceumDocs; LyceumDocs.make()'
