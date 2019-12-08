@@ -24,11 +24,11 @@ const STAGING = begin
     dir = joinpath(REPO_DIR, "staging")
     src = joinpath(dir, "src")
     static = joinpath(src, "static")
-    examples = joinpath(static, basename(EXAMPLE_DIR))
     (
         dir=dir,
         src = src,
         static = static,
+        build = joinpath(dir, "build"),
         script = joinpath(static, "scripts"),
         notebook = joinpath(static, "notebooks"),
         examples_tarfile = joinpath(static, "examples.tar.gz")
@@ -80,6 +80,8 @@ function make(; clean::Bool=false, builds::TupleN{Symbol} = BUILDS)
 
         # source/build are specified relative to root
         root = STAGING.dir,
+        build = relpath(STAGING.build, STAGING.dir),
+        source = relpath(STAGING.source, STAGING.dir),
         strict = !islocalbuild(),
         #repo = "https://github.com/tkf/Transducers.jl/blob/{commit}{path}#L{line}",
     )

@@ -13,7 +13,7 @@ function process_dir(root::AbsStr, rel_dir::AbsStr; builds::TupleN{Symbol} = BUI
             @warn "Skipping $abs_path: matches $SKIP_REGEX"
             continue
         elseif isnothing(idtitle)
-            error("Bad name \"$idtitle\": does not match $NAME_REGEX")
+            error("Bad name \"$idtitle\" for $abs_path: does not match $NAME_REGEX")
         else
             id, title = idtitle
             if id in seen
@@ -90,9 +90,9 @@ end
 
 
 islocalbuild() = get(ENV, "GITHUB_ACTIONS", nothing) != "true"
-shouldskip(path) = !isnothing(match(SKIP_REGEX, path))
-ismarkdown(file) = (@assert isfile(file); endswith(file, ".md"))
-isliterate(file) = (@assert isfile(file); endswith(file, ".jl"))
+shouldskip(path) = !isnothing(match(SKIP_REGEX, Literate.filename(path)))
+ismarkdown(file) = isfile(file) && endswith(file, ".md")
+isliterate(file) = isfile(file) && endswith(file, ".jl")
 
 function parse_filename(rel_path)
     if rel_path == "index.md"
@@ -122,16 +122,18 @@ function build_pages(root::AbsStr, rel_dir::AbsStr)
         rel_path = normpath(joinpath(rel_dir, file_or_dir))
         idtitle = parse_filename(rel_path)
 
+        @warn "YOOO: $rel_dir $abs_path"
+
         if shouldskip(abs_path)
             @warn "Skipping $abs_path: matches $SKIP_REGEX"
             continue
         elseif isnothing(idtitle)
-            error("Bad name \"$idtitle\": does not match $NAME_REGEX")
+            error("Bad name \"$idtitle\" for $abs_path: does not match $NAME_REGEX")
         else
             id, title = idtitle
         end
 
-        if isfile(abs_path) && ismarkdown(abs_path)
+        if ismarkdown(abs_path)
             # Only add markdown files to index
             page_or_section = relpath(abs_path, root)
         else
