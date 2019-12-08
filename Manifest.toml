@@ -484,7 +484,7 @@ uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
 [[Lyceum]]
 deps = ["LyceumAI", "LyceumBase", "LyceumMuJoCo", "MuJoCo", "Pkg", "Reexport", "Shapes", "UniversalLogger"]
-git-tree-sha1 = "310b98699b70997cb21b77cc4247dc00c7bb0a93"
+git-tree-sha1 = "6bde5a2441f801e4c9a8784b8bacc5fd30015611"
 repo-rev = "master"
 repo-url = "https://github.com/Lyceum/Lyceum.jl.git"
 uuid = "f25b5985-59c0-418b-a573-42c079f3f644"
@@ -492,7 +492,7 @@ version = "0.1.0"
 
 [[LyceumAI]]
 deps = ["Base64", "Distances", "EllipsisNotation", "FastClosures", "Flux", "Future", "IterativeSolvers", "LearnBase", "LinearAlgebra", "LyceumBase", "MLDataPattern", "MacroTools", "MuJoCo", "MuJoCo_jll", "Parameters", "Random", "Shapes", "StaticArrays", "Statistics", "UniversalLogger", "UnsafeArrays", "Zygote"]
-git-tree-sha1 = "e6f37cca9ebfdc17d1c0eb925a1884a001d6f063"
+git-tree-sha1 = "042926e6c760d2ebc181cec41e0775f8a0827b8c"
 repo-rev = "master"
 repo-url = "https://github.com/Lyceum/LyceumAI.jl.git"
 uuid = "6917c76a-ac01-4302-a33e-8c456ab70f71"
@@ -500,7 +500,7 @@ version = "0.1.0"
 
 [[LyceumBase]]
 deps = ["Adapt", "Dates", "ElasticArrays", "EllipsisNotation", "Future", "InteractiveUtils", "JLSO", "LibGit2", "LinearAlgebra", "Logging", "MacroTools", "Parameters", "Pkg", "Random", "Shapes", "StaticArrays", "Statistics", "UnicodePlots", "UniversalLogger", "UnsafeArrays"]
-git-tree-sha1 = "5cf2e12861e7ac7e6a533e648cac7d77f427c3b5"
+git-tree-sha1 = "8e578cc891fc32614c031eb9199501904e9eac65"
 repo-rev = "master"
 repo-url = "https://github.com/Lyceum/LyceumBase.jl.git"
 uuid = "db31fed1-ca1e-4084-8a49-12fae1996a55"
@@ -508,7 +508,7 @@ version = "0.1.0"
 
 [[LyceumMuJoCo]]
 deps = ["AxisArrays", "Distributions", "LinearAlgebra", "LyceumBase", "MuJoCo", "Random", "Reexport", "Shapes", "StaticArrays", "UnsafeArrays"]
-git-tree-sha1 = "5ffdcab7b210fd563dbd293eef008df9951c68b2"
+git-tree-sha1 = "47f0f872ce3e0954074d4a0f95c8d7e2bc724b6f"
 repo-rev = "master"
 repo-url = "https://github.com/Lyceum/LyceumMuJoCo.jl.git"
 uuid = "48b9757e-04b8-4dbf-b6ed-75c13d9e4026"

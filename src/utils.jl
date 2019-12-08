@@ -96,7 +96,7 @@ isliterate(file) = (@assert isfile(file); endswith(file, ".jl"))
 
 function parse_filename(rel_path)
     if rel_path == "index.md"
-        id, title = -1, "Home"
+        return -1, "Home"
     else
         m = match(NAME_REGEX, basename(rel_path))
         if isnothing(m)
