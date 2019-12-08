@@ -90,6 +90,7 @@ function make(; clean::Bool=false, builds::TupleN{Symbol} = BUILDS)
         repo = "github.com/Lyceum/LyceumDocs.jl.git",
         push_preview=true,
         root = STAGING.dir,
+        forcepush = true
     )
 end
 
