@@ -1,6 +1,6 @@
 module LyceumDocs
 
-using Lyceum, Pkg, Documenter, Literate, DevTools, Markdown
+using Lyceum, Pkg, Documenter, Literate, DevTools, Markdown, YAML
 
 const AbsStr = AbstractString
 const TupleN{T, N} = NTuple{N, T}
@@ -14,10 +14,9 @@ const ASSETS_DIR = joinpath(DOCS_DIR, "assets")
 const EXAMPLE_DIR = joinpath(DOCS_DIR, "assets/LyceumExamples")
 
 const BUILD_DIR = joinpath(REPO_DIR, "build")
-const BUILDS = (:documenter, :markdown, :script, :notebook)
+const BUILDS = (:markdown, :script, :notebook)
 
-const NAME_REGEX = r"^([0-9]+)-(.+)"
-const SKIP_REGEX = r"^@.*"
+
 const UNKNOWN_URL_REGEX = r"<unknown>/([^\"<>#{}:]+\.[^\"<>#{}:\(\)]+)"
 
 const STAGING = begin
@@ -36,6 +35,7 @@ const STAGING = begin
 end
 
 
+include("document.jl")
 include("utils.jl")
 include("processors.jl")
 include("examples.jl")
@@ -51,29 +51,41 @@ function make(; clean::Bool=false, builds::TupleN{Symbol} = BUILDS)
     end
 
     config = Dict{String, Any}()
+    if islocalbuild()
+        dir = dirname(REPO_DIR)
+        config["repo_root_url"] = dir
+        config["nbviewer_root_url"] = dir
+        config["binder_root_url"] = dir
+        config["repo_root_path"] = dir
+    end
 
     println()
-    @info "Processing files"
-    process_dir(DOCSRC_DIR, ".", builds=builds, config=config)
+    @info "Building Source Tree"
+    rootgroup = group(DOCSRC_DIR)
+    isempty(rootgroup.children) && error("No source files found in $(DOCSRC_DIR)")
 
     println()
-    @info "Generating Page Index"
-    isempty(readdir(STAGING.src)) && (@warn "No pages found"; return)
-    @info "Pages found:"
-    pages = build_pages(STAGING.src, ".")
+    @info "Processing Files"
+    process(rootgroup, config=config)
+
+    println()
+    pages = build_pages(rootgroup)
+    isempty(pages) && error("No generated source files found in $(STAGING.src)")
+    @info "Pages Index:"
     print_pages(pages)
 
     println()
     @info "Bundling examples"
-    bundle_examples()
+    r, status, _, str = Literate.Documenter.withoutput() do
+        bundle_examples()
+    end
+    status || throw(r)
 
     println()
     @info "Generating Docs"
     makedocs(;
         #modules = [Lyceum, Lyceum.LYCEUM_PACKAGES...],
-        format=Documenter.HTML(
-            prettyurls=!islocalbuild()
-        ),
+        format=Documenter.HTML(prettyurls=!islocalbuild()),
         pages = pages,
         sitename = "Lyceum",
         authors = "Colin Summers",
@@ -81,9 +93,8 @@ function make(; clean::Bool=false, builds::TupleN{Symbol} = BUILDS)
         # source/build are specified relative to root
         root = STAGING.dir,
         build = relpath(STAGING.build, STAGING.dir),
-        source = relpath(STAGING.source, STAGING.dir),
+        source = relpath(STAGING.src, STAGING.dir),
         strict = !islocalbuild(),
-        #repo = "https://github.com/tkf/Transducers.jl/blob/{commit}{path}#L{line}",
     )
 
     println()

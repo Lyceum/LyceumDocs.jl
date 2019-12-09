@@ -7,7 +7,7 @@ function collect_scripts()
     scripts = String[]
     for (root, _, files) in walkdir(LyceumDocs.DOCSRC_DIR), file in files
         abs_path = joinpath(root, file)
-        if LyceumDocs.isliterate(abs_path)
+        if LyceumDocs.isliterate(abs_path, read(abs_path, String))
             push!(scripts, abs_path)
         end
     end

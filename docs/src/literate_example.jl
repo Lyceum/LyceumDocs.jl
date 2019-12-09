@@ -1,12 +1,14 @@
+#cfg title = "Literate Example"
+#cfg weight = 10
+#cfg builds = (:markdown, :notebook)
+
 # # **7.** Example
 #
-#md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/@__NOTEBOOK_FILE__)
+#md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/@__NOTEBOOK__)
 #
 # This is an example generated with Literate based on this
-# source file: [`example.jl`](@__REPO_ROOT_URL__/@__PATH__)
-# source file: [`example.jl`](@__FULLPATH__)
+# source file: [`example.jl`](@__FILE_URL__)
 
-# It is recommended to have the [source file](@__REPO_ROOT_URL__/@__PATH__)
 # available when reading this, to better understand how the syntax in the source file
 # corresponds to the output you are seeing.
 
@@ -22,7 +24,6 @@ y = 2//5
 # [links](https://www.youtube.com/watch?v=dQw4w9WgXcQ).
 
 # It is possible to filter out lines depending on the output using the
-# `#md`, `#nb`, `#jl` and `#src` tags (see [Filtering Lines](@ref)):
 #md # - This line starts with `#md` and is thus only visible in the markdown output.
 #nb # - This line starts with `#nb` and is thus only visible in the notebook output.
 #jl # - This line starts with `#jl` and is thus only visible in the notebook output.

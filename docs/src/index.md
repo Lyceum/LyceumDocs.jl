@@ -1,3 +1,8 @@
+```@cfg
+title = "Home"
+weight = 1
+```
+
 # Lyceum
 
 ## Package Statuses
