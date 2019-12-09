@@ -1,6 +1,5 @@
 #cfg title = "Literate Example"
 #cfg weight = 10
-#cfg builds = (:markdown, :notebook)
 
 # # **7.** Example
 #

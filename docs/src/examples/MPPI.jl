@@ -1,6 +1,5 @@
 #cfg title = "MPPI"
 #cfg weight = 10
-#cfg active = false
 
 using LinearAlgebra, Random, Statistics
 

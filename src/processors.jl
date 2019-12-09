@@ -12,7 +12,10 @@ end
 
 # TODO SKIPLINE, SKIPFILE?
 
-function add_examples_header(content::String)
+function add_examples_header(content::String, build_root, repo_root)
+    x = relpath(joinpath(STAGING.examples_tarfile, filename * ".ipynb"), STAGING.src)
+    notebook_build = relpath(joinpath(build_root, x), repo_root)
+
     path = relpath(STAGING.examples_tarfile, STAGING.src)
     content = """
     # _This example and more can be downloaded [here]($path)_
@@ -73,6 +76,7 @@ function postprocess(s::String, doc::Document; config::Dict=Dict())
         notebook_build = relpath(joinpath(build_root, x), repo_root)
         s = replace(s, "@__NOTEBOOK__" => notebook_build)
         s = replace(s, "@__SCRIPT__" => relpath(joinpath(STAGING.script, filename * ".jl"), repo_root))
+        s = add_examples_header(s)
     elseif doc.kind === :documenter
         s = replace(s, "@__REPO_ROOT_URL__" => get(config, "repo_root_url", "<unknown>"))
     end
