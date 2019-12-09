@@ -16,9 +16,6 @@ const EXAMPLE_DIR = joinpath(DOCS_DIR, "assets/LyceumExamples")
 const BUILD_DIR = joinpath(REPO_DIR, "build")
 const BUILDS = (:markdown, :script, :notebook)
 
-
-const UNKNOWN_URL_REGEX = r"<unknown>/([^\"<>#{}:]+\.[^\"<>#{}:\(\)]+)"
-
 const STAGING = begin
     dir = joinpath(REPO_DIR, "staging")
     src = joinpath(dir, "src")
@@ -51,13 +48,6 @@ function make(; clean::Bool=false, builds::TupleN{Symbol} = BUILDS)
     end
 
     config = Dict{String, Any}()
-    if islocalbuild()
-        dir = dirname(REPO_DIR)
-        config["repo_root_url"] = dir
-        config["nbviewer_root_url"] = dir
-        config["binder_root_url"] = dir
-        config["repo_root_path"] = dir
-    end
 
     println()
     @info "Building Source Tree"
@@ -94,7 +84,7 @@ function make(; clean::Bool=false, builds::TupleN{Symbol} = BUILDS)
         root = STAGING.dir,
         build = relpath(STAGING.build, STAGING.dir),
         source = relpath(STAGING.src, STAGING.dir),
-        strict = !islocalbuild(),
+        strict = false #!islocalbuild(),
     )
 
     println()
@@ -103,7 +93,6 @@ function make(; clean::Bool=false, builds::TupleN{Symbol} = BUILDS)
         repo = "github.com/Lyceum/LyceumDocs.jl.git",
         push_preview=true,
         root = STAGING.dir,
-        forcepush = true
     )
 end
 

@@ -1,11 +1,9 @@
-
 function process(group::Group; config = Dict())
     for child in group.children
         child.config[:active] && process(child, config=config)
     end
     group
 end
-
 
 function process(doc::Document; config=Dict())
     abs_src = joinpath(doc.root, doc.rel_path)
@@ -74,10 +72,6 @@ function _build_pages(doc::Document)
 end
 
 
-
-
-islocalbuild() = get(ENV, "GITHUB_ACTIONS", nothing) != "true"
-
 function indented_println(xs...; indent = 0)
     for _ = 1:(Base.indent_width*indent)
         print(' ')
@@ -121,3 +115,5 @@ function execute_block(block::String)
     end
     m
 end
+
+islocalbuild() = get(ENV, "GITHUB_ACTIONS", nothing) != "true"

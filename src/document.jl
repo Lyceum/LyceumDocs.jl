@@ -7,11 +7,6 @@ struct Group <: Node
     config::Dict{Symbol, Any}
 end
 
-struct Product
-    root::String
-    rel_path::String
-end
-
 struct Document <: Node
     root::String
     rel_path::String
@@ -30,6 +25,7 @@ function inheritconfig!(dst, src)
     dst[:builds] = get(dst, :builds, src[:builds])
     dst
 end
+
 
 function group(root)
     config = parsefile_config(joinpath(root, "config.jl"))

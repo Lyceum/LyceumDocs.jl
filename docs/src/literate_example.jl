@@ -7,6 +7,7 @@
 #
 # This is an example generated with Literate based on this
 # source file: [`example.jl`](@__FILE_URL__)
+# source file: [`example.ipynb`](@__NOTEBOOK__)
 
 # available when reading this, to better understand how the syntax in the source file
 # corresponds to the output you are seeing.
