@@ -16,7 +16,7 @@ end
 
 
 const CONFIG_DEFAULTS = Dict(
-    :active => true,
+    :active => nothing,
     :builds => BUILDS,
     :hide => false,
     :short_title => :use_title,
@@ -25,8 +25,12 @@ const CONFIG_DEFAULTS = Dict(
 )
 
 function inheritconfig!(dst, src)
-    for k in (:active, :builds, :hide)
-        dst[k] === nothing && (dst[k] = src[k])
+    for k in keys(CONFIG_DEFAULTS)
+        if k === :short_title
+            dst[k] = get(dst, k, :use_title)
+        else
+            get(dst, k, nothing) === nothing && (dst[k] = src[k])
+        end
     end
 end
 
@@ -39,6 +43,7 @@ end
 
 function group(root)
     config = parsefile_config(joinpath(root, "config.jl"))
+    inheritconfig!(config, CONFIG_DEFAULTS)
     check_config(config)
 
     grp = Group(root, ".", Node[], config)
@@ -58,6 +63,7 @@ end
 
 function group(rel_path, parent::Group)
     config = parsefile_config(joinpath(parent.root, rel_path, "config.jl"))
+    @info config
     inheritconfig!(config, parent.config)
     check_config(config)
 
@@ -82,6 +88,8 @@ function document(rel_path, parent::Group)
     kind, config, body = parse_file(joinpath(parent.root, rel_path))
     inheritconfig!(config, parent.config)
     check_config(config)
+    @info config
+
     Document(parent.root, rel_path, kind, config)
 end
 
@@ -161,11 +169,7 @@ function parse_config(config_block::String)
     mod = execute_block(config_block)
     config = Dict{Symbol, Any}()
     for k in keys(CONFIG_DEFAULTS)
-        if isdefined(mod, k)
-            config[k] = getfield(mod, k)
-        else
-            config[k] = CONFIG_DEFAULTS[k]
-        end
+        isdefined(mod, k) && (config[k] = getfield(mod, k))
     end
     config
 end

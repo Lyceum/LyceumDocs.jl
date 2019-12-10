@@ -44,14 +44,9 @@ function preprocess(s::String, doc::Document; config::Dict=Dict())
 
     s = replace(s, "@__FILE_URL__" => "@__REPO_ROOT_URL__/$(relrepo_path)")
     s = replace(s, "@__FILE__" => relrepo_path)
+    s = replace(s, "@__EXAMPLES__" => PATHS.examples_tarfile)
     s = replace(s, "@__EXAMPLES_README__" => read(joinpath(EXAMPLE_DIR, "README.md"), String))
 
-    if occursin("@__EXAMPLES_README__", s)
-        print(s)
-        println("--------------")
-        print(joinpath(EXAMPLE_DIR, "README.md"), String)
-        error()
-    end
 
     if doc.kind === :documenter
         s = parse_documenter(s).body
@@ -66,7 +61,6 @@ function preprocess(s::String, doc::Document; config::Dict=Dict())
         script_path = joinpath(PATHS.script, rel_base * ".jl")
         s = replace(s, "@__SCRIPT__" => script_path)
 
-        s = replace(s, "@__EXAMPLES__" => PATHS.examples_tarfile)
     end
 
     s
