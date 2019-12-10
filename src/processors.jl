@@ -11,14 +11,14 @@ function add_editurl(content::String)
 end
 
 function add_examples_header(content::String)
-    path = relpath(STAGING.examples_tarfile, STAGING.src)
     content = """
-    #md # _This example and more can be downloaded [here]($path)_
+    #md # *This example and more are also available as Julia scripts and Jupyter notebooks.*
+    #md # *See [the how-to page](example_howto.md) for more information.*
     #md #
     #md # ---
+    #md #
     """ * content
 end
-
 
 function preprocess(notebook::Dict, args...; kwargs...)
     for cell in notebook["cells"], i in eachindex(cell["source"])
@@ -38,12 +38,20 @@ end
 function preprocess(s::String, doc::Document; config::Dict=Dict())
     abs_src = joinpath(doc.root, doc.rel_path)
     repo_root = get(config, "repo_root_path", REPO_DIR)
-    repo_root_url =  get(config, "repo_root_url", "<unknown>")
-    rel_root_name = first(splitext(doc.rel_path))
+
+    rel_base = first(splitext(doc.rel_path))
     relrepo_path = relpath(abs_src, repo_root)
 
     s = replace(s, "@__FILE_URL__" => "@__REPO_ROOT_URL__/$(relrepo_path)")
     s = replace(s, "@__FILE__" => relrepo_path)
+    s = replace(s, "@__EXAMPLES_README__" => read(joinpath(EXAMPLE_DIR, "README.md"), String))
+
+    if occursin("@__EXAMPLES_README__", s)
+        print(s)
+        println("--------------")
+        print(joinpath(EXAMPLE_DIR, "README.md"), String)
+        error()
+    end
 
     if doc.kind === :documenter
         s = parse_documenter(s).body
@@ -52,11 +60,13 @@ function preprocess(s::String, doc::Document; config::Dict=Dict())
         s = parse_literate(s).body
         s = add_examples_header(s)
 
-        notebook_path = relpath(joinpath(STAGING.notebook, rel_root_name * ".ipynb"), STAGING.src)
+        notebook_path = joinpath(PATHS.notebook, rel_base * ".ipynb")
         s = replace(s, "@__NOTEBOOK__" => notebook_path)
 
-        script_path = relpath(joinpath(STAGING.script, rel_root_name * ".jl"), STAGING.src)
+        script_path = joinpath(PATHS.script, rel_base * ".jl")
         s = replace(s, "@__SCRIPT__" => script_path)
+
+        s = replace(s, "@__EXAMPLES__" => PATHS.examples_tarfile)
     end
 
     s

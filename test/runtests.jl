@@ -5,7 +5,7 @@ using Test, Pkg, LyceumDocs
 
 function collect_scripts()
     scripts = String[]
-    for (root, _, files) in walkdir(LyceumDocs.DOCSRC_DIR), file in files
+    for (root, _, files) in walkdir(LyceumDocs.SRC_DIR), file in files
         abs_path = joinpath(root, file)
         if LyceumDocs.isliterate(abs_path, read(abs_path, String))
             push!(scripts, abs_path)
@@ -30,7 +30,7 @@ function do_one(script)
     end
 end
 
-@testset "$(relpath(script, LyceumDocs.DOCSRC_DIR))" for script in collect_scripts()
+@testset "$(relpath(script, LyceumDocs.SRC_DIR))" for script in collect_scripts()
     @test do_one(script)
 end
 

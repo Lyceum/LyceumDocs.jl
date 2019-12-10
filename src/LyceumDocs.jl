@@ -8,23 +8,21 @@ const TupleN{T, N} = NTuple{N, T}
 const REPO_DIR = normpath(joinpath(@__DIR__, ".."))
 const DOCS_DIR = joinpath(REPO_DIR, "docs")
 
-const DOCSRC_DIR = joinpath(DOCS_DIR, "src")
-const ASSETS_DIR = joinpath(DOCS_DIR, "assets")
+const SRC_DIR = joinpath(DOCS_DIR, "src")
+const STAGING_DIR = "staging"
+const BUILD_DIR = "build"
 
+const ASSETS_DIR = joinpath(DOCS_DIR, "assets")
 const EXAMPLE_DIR = joinpath(DOCS_DIR, "assets/LyceumExamples")
 
-const BUILD_DIR = joinpath(REPO_DIR, "build")
 const BUILDS = (:markdown, :script, :notebook)
 
-const STAGING = begin
-    dir = joinpath(REPO_DIR, "staging")
-    src = joinpath(dir, "src")
-    static = joinpath(src, "static")
+const PATHS = begin
+    src = "src"
+    static = "static"
     (
-        dir=dir,
         src = src,
         static = static,
-        build = joinpath(dir, "build"),
         script = joinpath(static, "scripts"),
         notebook = joinpath(static, "notebooks"),
         examples_tarfile = joinpath(static, "examples.tar.gz")
@@ -40,19 +38,19 @@ include("package_definition.jl")
 
 
 function make(; clean::Bool=false, builds::TupleN{Symbol} = BUILDS)
-    if isdir(STAGING.dir) && clean
-        @info "Cleaning staging dir ($(STAGING.dir))"
-        rm(STAGING.dir, recursive=true, force=true)
-    elseif isdir(STAGING.dir)
-        error("$STAGING.dir exists but clean was false")
+    if isdir(STAGING_DIR) && clean
+        @info "Cleaning staging dir ($(STAGING_DIR))"
+        rm(STAGING_DIR, recursive=true, force=true)
+    elseif isdir(STAGING_DIR)
+        error("$STAGING_DIR exists but clean was false")
     end
 
     config = Dict{String, Any}()
 
     println()
     @info "Building Source Tree"
-    rootgroup = group(DOCSRC_DIR)
-    isempty(rootgroup.children) && error("No source files found in $(DOCSRC_DIR)")
+    rootgroup = group(SRC_DIR)
+    isempty(rootgroup.children) && error("No source files found in $(SRC_DIR)")
 
     println()
     @info "Processing Files"
@@ -60,7 +58,7 @@ function make(; clean::Bool=false, builds::TupleN{Symbol} = BUILDS)
 
     println()
     pages = build_pages(rootgroup)
-    isempty(pages) && error("No generated source files found in $(STAGING.src)")
+    isempty(pages) && error("No generated source files found in $(STAGING_DIR)")
     @info "Pages Index:"
     print_pages(pages)
 
@@ -81,9 +79,9 @@ function make(; clean::Bool=false, builds::TupleN{Symbol} = BUILDS)
         authors = "Colin Summers",
 
         # source/build are specified relative to root
-        root = STAGING.dir,
-        build = relpath(STAGING.build, STAGING.dir),
-        source = relpath(STAGING.src, STAGING.dir),
+        root = DOCS_DIR,
+        build = relpath(BUILD_DIR, DOCS_DIR),
+        source = relpath(STAGING_DIR, DOCS_DIR),
         strict = false #!islocalbuild(),
     )
 
@@ -92,7 +90,8 @@ function make(; clean::Bool=false, builds::TupleN{Symbol} = BUILDS)
     deploydocs(
         repo = "github.com/Lyceum/LyceumDocs.jl.git",
         push_preview=true,
-        root = STAGING.dir,
+        root = DOCS_DIR,
+        target = relpath(BUILD_DIR, DOCS_DIR),
     )
 end
 

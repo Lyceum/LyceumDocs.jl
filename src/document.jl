@@ -15,21 +15,32 @@ struct Document <: Node
 end
 
 
-const REQUIRED_CONFIG = (:title, :weight)
-const CONFIG = (REQUIRED_CONFIG..., :active, :short_title, :builds)
-const CONFIG_DEFAULTS = Dict(:active => true, :builds => BUILDS)
+const CONFIG_DEFAULTS = Dict(
+    :active => true,
+    :builds => BUILDS,
+    :hide => false,
+    :short_title => :use_title,
+    :title => nothing,
+    :weight => nothing
+)
 
 function inheritconfig!(dst, src)
-    dst[:active] = get(dst, :active, src[:active])
-    dst[:short_title] = get(dst, :short_title, dst[:title])
-    dst[:builds] = get(dst, :builds, src[:builds])
-    dst
+    for k in (:active, :builds, :hide)
+        dst[k] === nothing && (dst[k] = src[k])
+    end
 end
 
+function check_config(config)
+    config[:short_title] === :use_title && (config[:short_title] = config[:title])
+    for (k, v) in pairs(config)
+        v === nothing && error("Missing config parameter $k")
+    end
+end
 
 function group(root)
     config = parsefile_config(joinpath(root, "config.jl"))
-    inheritconfig!(config, CONFIG_DEFAULTS)
+    check_config(config)
+
     grp = Group(root, ".", Node[], config)
 
     for child in readdir(root)
@@ -48,6 +59,8 @@ end
 function group(rel_path, parent::Group)
     config = parsefile_config(joinpath(parent.root, rel_path, "config.jl"))
     inheritconfig!(config, parent.config)
+    check_config(config)
+
     grp = Group(parent.root, rel_path, Node[], config)
 
     for child in readdir(joinpath(parent.root, rel_path))
@@ -68,6 +81,7 @@ end
 function document(rel_path, parent::Group)
     kind, config, body = parse_file(joinpath(parent.root, rel_path))
     inheritconfig!(config, parent.config)
+    check_config(config)
     Document(parent.root, rel_path, kind, config)
 end
 
@@ -146,11 +160,11 @@ end
 function parse_config(config_block::String)
     mod = execute_block(config_block)
     config = Dict{Symbol, Any}()
-    for k in CONFIG
+    for k in keys(CONFIG_DEFAULTS)
         if isdefined(mod, k)
             config[k] = getfield(mod, k)
-        elseif k in REQUIRED_CONFIG
-            error("Missing required config key: $k")
+        else
+            config[k] = CONFIG_DEFAULTS[k]
         end
     end
     config

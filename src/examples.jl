@@ -57,11 +57,12 @@ end
 
 function bundle_examples()
     Pkg.PlatformEngines.probe_platform_engines!()
+    paths = map(p->joinpath(STAGING_DIR, p), PATHS)
     mktempdir() do tmpdir
         proj = mkdir(joinpath(tmpdir, basename(EXAMPLE_DIR)))
         create_example_project(proj)
-        isdir(STAGING.script) && cp(STAGING.script, joinpath(proj, basename(STAGING.script)))
-        isdir(STAGING.notebook) && cp(STAGING.notebook, joinpath(proj, basename(STAGING.notebook)))
-        run(Pkg.PlatformEngines.gen_package_cmd(tmpdir, STAGING.examples_tarfile))
+        isdir(paths.script) && cp(paths.script, joinpath(proj, basename(paths.script)))
+        isdir(paths.notebook) && cp(paths.notebook, joinpath(proj, basename(paths.notebook)))
+        run(Pkg.PlatformEngines.gen_package_cmd(tmpdir, paths.examples_tarfile))
     end
 end

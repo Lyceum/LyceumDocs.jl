@@ -20,25 +20,26 @@ function process(doc::Document; config=Dict())
     config["postprocess"] = post
 
     builds = doc.config[:builds]
+    paths = map(p->joinpath(STAGING_DIR, p), PATHS)
 
     if doc.kind === :documenter && :markdown in builds
-        abs_dst = joinpath(STAGING.src, doc.rel_path)
+        abs_dst = joinpath(STAGING_DIR, doc.rel_path)
         mkpath(dirname(abs_dst))
         content = post(pre(read(abs_src, String)))
         open(io -> write(io, content), abs_dst, "w")
     else
         if :markdown in builds
-            abs_dst = joinpath(STAGING.src, doc.rel_path)
+            abs_dst = joinpath(STAGING_DIR, doc.rel_path)
             mkpath(dirname(abs_dst))
             Literate.markdown(abs_src, dirname(abs_dst), config=config)
         end
         if :script in builds
-            abs_dst = joinpath(STAGING.script, doc.rel_path)
+            abs_dst = joinpath(paths.script, doc.rel_path)
             mkpath(dirname(abs_dst))
             Literate.script(abs_src, dirname(abs_dst), config=config)
         end
         if :notebook in builds
-            abs_dst = joinpath(STAGING.notebook, doc.rel_path)
+            abs_dst = joinpath(paths.notebook, doc.rel_path)
             mkpath(dirname(abs_dst))
             Literate.notebook(abs_src, dirname(abs_dst), config=config)
         end
@@ -65,7 +66,9 @@ end
 function _build_pages(doc::Document)
     if doc.config[:active] && (:markdown in doc.config[:builds])
         path = first(splitext(doc.rel_path)) * ".md"
-        return doc.config[:weight] => doc.config[:short_title] => path
+        page = doc.config[:short_title] => path
+        page = doc.config[:hide] ? hide(page) : page
+        return doc.config[:weight] => page
     else
         return nothing
     end
