@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Running a simple controller · Lyceum</title><link rel="canonical" href="https://docs.lyceum.ml/dev/examples/MPPI/index.html"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">Lyceum</span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Examples</span><ul><li class="is-active"><a class="tocitem" href>Running a simple controller</a><ul class="internal"><li><a class="tocitem" href="#Introduction-1"><span>Introduction</span></a></li></ul></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Running a simple controller</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Running a simple controller</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/Lyceum/LyceumDocs.jl/blob/master/docs/src/examples/MPPI.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><div class="admonition is-info"><header class="admonition-header">Running examples locally</header><div class="admonition-body"><p>This example and more are also available as Julia scripts and Jupyter notebooks.</p><p>See <a href="examples/example_howto.md">the how-to page</a> for more information.</p></div></div><h1 id="Running-a-simple-controller-1"><a class="docs-heading-anchor" href="#Running-a-simple-controller-1">Running a simple controller</a><a class="docs-heading-anchor-permalink" href="#Running-a-simple-controller-1" title="Permalink"></a></h1><h2 id="Introduction-1"><a class="docs-heading-anchor" href="#Introduction-1">Introduction</a><a class="docs-heading-anchor-permalink" href="#Introduction-1" title="Permalink"></a></h2><p>In this example we walk through the process of setting up an experiment that runs <a href="https://ieeexplore.ieee.org/iel7/7478842/7487087/07487277.pdf">Model-Predictive Path Integral Control</a>, or &quot;MPPI&quot;, a Model-Predictive Control method, on a simple PointMass environment.</p><p>First, let&#39;s go head and grab all the dependencies</p><pre><code class="language-julia">using LinearAlgebra, Random, Statistics # From Stdlib
+using LyceumAI # For the MPPI controller
+using LyceumMuJoCo # For the PointMass environment
+using LyceumBase.Tools # For the ControllerIterator discussed below
+using Plots</code></pre><p><strong>TODO LINK REF</strong> Next, we&#39;ll define an <code>Experiment</code> which we&#39;ll use to log the trajectory executed by our controller and save the results to &quot;/tmp/pointmass.jlso&quot;.</p><pre><code class="language-julia">exper = Experiment(&quot;/tmp/pointmass.jlso&quot;, overwrite=true);</code></pre><p>Then we configure and instantiate of our <code>PointMass</code> environment and <code>MPPI</code> controller. See the documention for <code>MPPI</code> to learn more about its parameters. <strong>TODO LINK REF</strong></p><pre><code class="language-julia">env = LyceumMuJoCo.PointMass();
+mppi = MPPI(
+    sharedmemory_envctor = (i)-&gt;sharedmemory_envs(LyceumMuJoCo.PointMass, i),
+    covar0 = Diagonal(0.001^2*I, size(actionspace(env), 1)),
+    lambda = 0.005,
+    K =  32,
+    H = 25,
+    gamma = 0.99
+);</code></pre><p>Finally, let&#39;s rollout our controller for 1000 timesteps. As discused in the algorithms section <strong>TODO LINK REF</strong>, <code>AbstractController</code>&#39;s are by themselves not iterable, so we wrap them in a <code>ControllerIterator</code> which will apply the controls generated by <code>MPPI</code> to the environment at each timestep. We&#39;ll also plot the progress so far to the terminal every 100 timesteps. For clarity, we do not reproduce these plots here, but you&#39;ll see them when you run this example locally!</p><pre><code class="language-julia">iter = ControllerIterator(mppi, env; T=1000, plotiter=100);
+for (t, traj) in iter
+end</code></pre><p>Let&#39;s go ahead and plot the final reward trajectory and see how we did:</p><pre><code class="language-julia">plot(iter.trajectory.rewards)</code></pre><?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="600" height="400" viewBox="0 0 2400 1600">
+<defs>
+  <clipPath id="clip4700">
+    <rect x="0" y="0" width="2400" height="1600"/>
+  </clipPath>
+</defs>
+<path clip-path="url(#clip4700)" d="
+M0 1600 L2400 1600 L2400 0 L0 0  Z
+  " fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<defs>
+  <clipPath id="clip4701">
+    <rect x="480" y="0" width="1681" height="1600"/>
+  </clipPath>
+</defs>
+<path clip-path="url(#clip4700)" d="
+M86.9921 1521.01 L2352.76 1521.01 L2352.76 47.2441 L86.9921 47.2441  Z
+  " fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<defs>
+  <clipPath id="clip4702">
+    <rect x="86" y="47" width="2267" height="1475"/>
+  </clipPath>
+</defs>
+<polyline clip-path="url(#clip4702)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  148.978,1521.01 148.978,47.2441 
+  "/>
+<polyline clip-path="url(#clip4702)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  683.891,1521.01 683.891,47.2441 
+  "/>
+<polyline clip-path="url(#clip4702)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  1218.8,1521.01 1218.8,47.2441 
+  "/>
+<polyline clip-path="url(#clip4702)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  1753.72,1521.01 1753.72,47.2441 
+  "/>
+<polyline clip-path="url(#clip4702)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  2288.63,1521.01 2288.63,47.2441 
+  "/>
+<polyline clip-path="url(#clip4702)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  86.9921,1479.31 2352.76,1479.31 
+  "/>
+<polyline clip-path="url(#clip4702)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  86.9921,1131.72 2352.76,1131.72 
+  "/>
+<polyline clip-path="url(#clip4702)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  86.9921,784.13 2352.76,784.13 
+  "/>
+<polyline clip-path="url(#clip4702)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  86.9921,436.538 2352.76,436.538 
+  "/>
+<polyline clip-path="url(#clip4702)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  86.9921,88.946 2352.76,88.946 
+  "/>
+<polyline clip-path="url(#clip4700)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  86.9921,1521.01 2352.76,1521.01 
+  "/>
+<polyline clip-path="url(#clip4700)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  86.9921,1521.01 86.9921,47.2441 
+  "/>
+<polyline clip-path="url(#clip4700)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  148.978,1521.01 148.978,1498.9 
+  "/>
+<polyline clip-path="url(#clip4700)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  683.891,1521.01 683.891,1498.9 
+  "/>
+<polyline clip-path="url(#clip4700)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  1218.8,1521.01 1218.8,1498.9 
+  "/>
+<polyline clip-path="url(#clip4700)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  1753.72,1521.01 1753.72,1498.9 
+  "/>
+<polyline clip-path="url(#clip4700)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  2288.63,1521.01 2288.63,1498.9 
+  "/>
+<polyline clip-path="url(#clip4700)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  86.9921,1479.31 120.979,1479.31 
+  "/>
+<polyline clip-path="url(#clip4700)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  86.9921,1131.72 120.979,1131.72 
+  "/>
+<polyline clip-path="url(#clip4700)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  86.9921,784.13 120.979,784.13 
+  "/>
+<polyline clip-path="url(#clip4700)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  86.9921,436.538 120.979,436.538 
+  "/>
+<polyline clip-path="url(#clip4700)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  86.9921,88.946 120.979,88.946 
+  "/>
+<g clip-path="url(#clip4700)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 148.978, 1575.01)" x="148.978" y="1575.01">0</text>
+</g>
+<g clip-path="url(#clip4700)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 683.891, 1575.01)" x="683.891" y="1575.01">250</text>
+</g>
+<g clip-path="url(#clip4700)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 1218.8, 1575.01)" x="1218.8" y="1575.01">500</text>
+</g>
+<g clip-path="url(#clip4700)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 1753.72, 1575.01)" x="1753.72" y="1575.01">750</text>
+</g>
+<g clip-path="url(#clip4700)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 2288.63, 1575.01)" x="2288.63" y="1575.01">1000</text>
+</g>
+<g clip-path="url(#clip4700)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 1496.81)" x="62.9921" y="1496.81">0.00</text>
+</g>
+<g clip-path="url(#clip4700)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 1149.22)" x="62.9921" y="1149.22">0.25</text>
+</g>
+<g clip-path="url(#clip4700)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 801.63)" x="62.9921" y="801.63">0.50</text>
+</g>
+<g clip-path="url(#clip4700)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 454.038)" x="62.9921" y="454.038">0.75</text>
+</g>
+<g clip-path="url(#clip4700)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 106.446)" x="62.9921" y="106.446">1.00</text>
+</g>
+<polyline clip-path="url(#clip4702)" style="stroke:#009af9; stroke-width:4; stroke-opacity:1; fill:none" points="
+  151.118,1479.3 153.257,1479.24 155.397,1479.1 157.536,1478.86 159.676,1478.48 161.816,1477.98 163.955,1477.37 166.095,1476.57 168.235,1475.52 170.374,1474.22 
+  172.514,1472.73 174.654,1471.07 176.793,1469.19 178.933,1467.12 181.073,1464.93 183.212,1462.62 185.352,1460.14 187.492,1457.45 189.631,1454.61 191.771,1451.44 
+  193.911,1448.01 196.05,1444.24 198.19,1440.11 200.33,1435.77 202.469,1431.26 204.609,1426.57 206.748,1421.74 208.888,1416.68 211.028,1411.39 213.167,1405.87 
+  215.307,1400.17 217.447,1394.18 219.586,1387.93 221.726,1381.47 223.866,1374.81 226.005,1367.91 228.145,1360.88 230.285,1353.67 232.424,1346.32 234.564,1338.86 
+  236.704,1331.28 238.843,1323.46 240.983,1315.29 243.123,1307.05 245.262,1298.71 247.402,1290.24 249.542,1281.63 251.681,1272.89 253.821,1264.02 255.96,1255.15 
+  258.1,1246.19 260.24,1237.06 262.379,1227.77 264.519,1218.21 266.659,1208.49 268.798,1198.63 270.938,1188.69 273.078,1178.65 275.217,1168.37 277.357,1157.88 
+  279.497,1147.33 281.636,1136.68 283.776,1125.92 285.916,1115.09 288.055,1104.08 290.195,1093.04 292.335,1081.84 294.474,1070.46 296.614,1058.99 298.754,1047.32 
+  300.893,1035.56 303.033,1023.88 305.173,1012.16 307.312,1000.27 309.452,988.313 311.591,976.248 313.731,963.982 315.871,951.573 318.01,939.129 320.15,926.569 
+  322.29,913.816 324.429,900.937 326.569,887.857 328.709,874.511 330.848,861.022 332.988,847.508 335.128,833.929 337.267,820.324 339.407,806.598 341.547,792.666 
+  343.686,778.543 345.826,764.416 347.966,750.137 350.105,735.793 352.245,721.219 354.385,706.442 356.524,691.58 358.664,676.593 360.803,661.54 362.943,646.328 
+  365.083,631.01 367.222,615.627 369.362,600.292 371.502,584.859 373.641,569.359 375.781,553.814 377.921,538.233 380.06,522.649 382.2,507.106 384.34,491.579 
+  386.479,476.043 388.619,460.393 390.759,444.552 392.898,428.568 395.038,412.506 397.178,396.259 399.317,379.851 401.457,363.51 403.597,347.222 405.736,330.888 
+  407.876,314.518 410.015,298.228 412.155,281.956 414.295,265.933 416.434,250.251 418.574,234.778 420.714,219.506 422.853,204.508 424.993,189.836 427.133,175.602 
+  429.272,161.739 431.412,148.245 433.552,135.094 435.691,122.322 437.831,109.962 439.971,97.9793 442.11,91.6674 444.25,102.88 446.39,113.825 448.529,124.398 
+  450.669,134.602 452.809,144.362 454.948,153.712 457.088,162.712 459.227,171.354 461.367,179.753 463.507,187.885 465.646,195.786 467.786,203.426 469.926,210.563 
+  472.065,217.171 474.205,223.334 476.345,229.15 478.484,234.535 480.624,239.474 482.764,244.069 484.903,248.371 487.043,252.345 489.183,255.993 491.322,259.556 
+  493.462,262.928 495.602,266.053 497.741,268.961 499.881,271.562 502.021,273.941 504.16,276.021 506.3,277.809 508.44,279.284 510.579,280.65 512.719,281.832 
+  514.858,282.802 516.998,283.451 519.138,283.723 521.277,283.528 523.417,283.018 525.557,282.289 527.696,281.403 529.836,280.383 531.976,279.088 534.115,277.515 
+  536.255,275.744 538.395,273.854 540.534,271.748 542.674,269.367 544.814,266.813 546.953,264.199 549.093,261.433 551.233,258.453 553.372,255.271 555.512,251.908 
+  557.652,248.428 559.791,244.745 561.931,240.918 564.07,236.912 566.21,232.698 568.35,228.335 570.489,223.907 572.629,219.258 574.769,214.472 576.908,209.536 
+  579.048,204.413 581.188,199.112 583.327,193.608 585.467,187.902 587.607,182.098 589.746,176.185 591.886,170.244 594.026,164.342 596.165,158.479 598.305,152.686 
+  600.445,147.007 602.584,141.467 604.724,136.064 606.864,130.945 609.003,126.129 611.143,121.618 613.282,117.348 615.422,113.279 617.562,109.557 619.701,106.085 
+  621.841,102.889 623.981,99.908 626.12,97.2452 628.26,94.9046 630.4,92.8944 632.539,91.2621 634.679,89.8538 636.819,89.3153 638.958,90.2399 641.098,91.0707 
+  643.238,91.6287 645.377,91.9834 647.517,92.1461 649.657,92.0892 651.796,91.8088 653.936,91.4759 656.076,91.2143 658.215,91.0219 660.355,90.8588 662.494,90.5788 
+  664.634,90.3006 666.774,90.0324 668.913,89.7992 671.053,89.6191 673.193,89.5074 675.332,89.3952 677.472,89.2393 679.612,89.0573 681.751,89.1177 683.891,89.2257 
+  686.031,89.2802 688.17,89.2466 690.31,89.1776 692.45,89.0851 694.589,88.9911 696.729,89.0328 698.869,89.1301 701.008,89.2341 703.148,89.3257 705.288,89.3635 
+  707.427,89.3837 709.567,89.3483 711.707,89.3147 713.846,89.2907 715.986,89.2724 718.125,89.252 720.265,89.2292 722.405,89.2539 724.544,89.2328 726.684,89.1607 
+  728.824,89.0943 730.963,89.0303 733.103,89.0217 735.243,89.0376 737.382,89.0239 739.522,88.9978 741.662,88.9804 743.801,89.0469 745.941,89.1101 748.081,89.1115 
+  750.22,89.1027 752.36,89.1367 754.5,89.2053 756.639,89.1901 758.779,89.1732 760.919,89.1846 763.058,89.2369 765.198,89.3136 767.337,89.3514 769.477,89.3305 
+  771.617,89.2788 773.756,89.2192 775.896,89.1702 778.036,89.0735 780.175,88.9915 782.315,89.0392 784.455,89.0562 786.594,89.0691 788.734,89.0884 790.874,89.0761 
+  793.013,89.0227 795.153,89.0157 797.293,89.0069 799.432,88.9631 801.572,88.9619 803.712,88.96 805.851,88.9881 807.991,89.0116 810.131,89.0296 812.27,89.0151 
+  814.41,89.0106 816.549,89.0606 818.689,89.1237 820.829,89.1796 822.968,89.2105 825.108,89.2086 827.248,89.2596 829.387,89.3104 831.527,89.3462 833.667,89.377 
+  835.806,89.3537 837.946,89.355 840.086,89.3789 842.225,89.4081 844.365,89.4065 846.505,89.3489 848.644,89.2918 850.784,89.2296 852.924,89.1739 855.063,89.1459 
+  857.203,89.0921 859.343,89.0838 861.482,89.1158 863.622,89.1773 865.762,89.2133 867.901,89.1953 870.041,89.1922 872.18,89.1884 874.32,89.2292 876.46,89.2468 
+  878.599,89.2238 880.739,89.1691 882.879,89.1245 885.018,89.0769 887.158,89.0269 889.298,89.0031 891.437,89.1298 893.577,89.2118 895.717,89.3264 897.856,89.4346 
+  899.996,89.4645 902.136,89.4712 904.275,89.4763 906.415,89.4479 908.555,89.4246 910.694,89.3371 912.834,89.2067 914.974,89.1418 917.113,89.1255 919.253,89.105 
+  921.392,89.056 923.532,88.9905 925.672,88.965 927.811,89.0129 929.951,89.0318 932.091,89.0646 934.23,89.117 936.37,89.1493 938.51,89.1552 940.649,89.09 
+  942.789,88.994 944.929,88.9822 947.068,89.0237 949.208,89.0802 951.348,89.1009 953.487,89.1211 955.627,89.1406 957.767,89.1515 959.906,89.136 962.046,89.0778 
+  964.186,89.0095 966.325,89.0194 968.465,89.054 970.604,89.1029 972.744,89.1446 974.884,89.1623 977.023,89.1629 979.163,89.182 981.303,89.1944 983.442,89.1704 
+  985.582,89.1516 987.722,89.1864 989.861,89.2266 992.001,89.2557 994.141,89.2659 996.28,89.2495 998.42,89.2284 1000.56,89.2269 1002.7,89.214 1004.84,89.1654 
+  1006.98,89.0873 1009.12,89.0392 1011.26,89.0821 1013.4,89.1046 1015.54,89.0971 1017.68,89.1112 1019.82,89.1211 1021.96,89.126 1024.1,89.1326 1026.24,89.1245 
+  1028.38,89.123 1030.51,89.0869 1032.65,89.02 1034.79,88.9603 1036.93,89.0501 1039.07,89.1989 1041.21,89.3255 1043.35,89.3885 1045.49,89.342 1047.63,89.26 
+  1049.77,89.1564 1051.91,89.0665 1054.05,88.989 1056.19,89.0138 1058.33,89.188 1060.47,89.3348 1062.61,89.4721 1064.75,89.5636 1066.89,89.6245 1069.03,89.6212 
+  1071.17,89.5358 1073.31,89.4028 1075.45,89.3278 1077.59,89.2841 1079.73,89.2112 1081.87,89.142 1084.01,89.0558 1086.15,89.0804 1088.29,89.1003 1090.43,89.0621 
+  1092.56,89.0751 1094.7,89.0562 1096.84,88.9883 1098.98,88.9634 1101.12,89.0338 1103.26,89.0967 1105.4,89.1297 1107.54,89.1746 1109.68,89.2434 1111.82,89.3043 
+  1113.96,89.2836 1116.1,89.2258 1118.24,89.1963 1120.38,89.2223 1122.52,89.2819 1124.66,89.3149 1126.8,89.3068 1128.94,89.2501 1131.08,89.185 1133.22,89.1303 
+  1135.36,89.1178 1137.5,89.0639 1139.64,88.9984 1141.78,89.0303 1143.92,89.0821 1146.06,89.1188 1148.2,89.1443 1150.34,89.1974 1152.47,89.2526 1154.61,89.2968 
+  1156.75,89.2765 1158.89,89.2461 1161.03,89.2759 1163.17,89.2959 1165.31,89.2475 1167.45,89.1154 1169.59,88.9976 1171.73,89.0877 1173.87,89.1866 1176.01,89.2188 
+  1178.15,89.1759 1180.29,89.1413 1182.43,89.134 1184.57,89.0889 1186.71,89.0432 1188.85,89.0166 1190.99,89.0294 1193.13,89.0536 1195.27,89.0608 1197.41,89.1337 
+  1199.55,89.1818 1201.69,89.226 1203.83,89.2785 1205.97,89.3014 1208.11,89.2479 1210.25,89.1782 1212.39,89.1442 1214.52,89.0753 1216.66,88.9959 1218.8,88.9753 
+  1220.94,88.994 1223.08,89.0525 1225.22,89.1298 1227.36,89.1997 1229.5,89.1953 1231.64,89.1948 1233.78,89.1582 1235.92,89.0761 1238.06,89.0748 1240.2,89.1371 
+  1242.34,89.1305 1244.48,89.0962 1246.62,89.1131 1248.76,89.1257 1250.9,89.1477 1253.04,89.1992 1255.18,89.2019 1257.32,89.1737 1259.46,89.1111 1261.6,89.0804 
+  1263.74,89.0563 1265.88,88.9763 1268.02,89.0265 1270.16,89.0952 1272.3,89.1849 1274.44,89.22 1276.57,89.198 1278.71,89.1488 1280.85,89.0923 1282.99,89.0583 
+  1285.13,89.0556 1287.27,89.0078 1289.41,88.969 1291.55,88.9733 1293.69,88.9893 1295.83,88.9569 1297.97,88.9996 1300.11,89.096 1302.25,89.1521 1304.39,89.1919 
+  1306.53,89.2407 1308.67,89.2473 1310.81,89.2421 1312.95,89.2639 1315.09,89.2593 1317.23,89.2482 1319.37,89.2095 1321.51,89.163 1323.65,89.1188 1325.79,89.1545 
+  1327.93,89.1845 1330.07,89.1486 1332.21,89.1185 1334.35,89.1095 1336.49,89.1266 1338.62,89.0886 1340.76,89.0358 1342.9,89.0174 1345.04,89.0363 1347.18,89.051 
+  1349.32,89.0745 1351.46,89.1276 1353.6,89.2536 1355.74,89.3908 1357.88,89.4772 1360.02,89.515 1362.16,89.4819 1364.3,89.3777 1366.44,89.2376 1368.58,89.1053 
+  1370.72,89.0887 1372.86,89.1904 1375,89.2247 1377.14,89.1837 1379.28,89.1022 1381.42,89.0095 1383.56,89.0921 1385.7,89.2458 1387.84,89.3307 1389.98,89.3763 
+  1392.12,89.4125 1394.26,89.4389 1396.4,89.4338 1398.54,89.4493 1400.67,89.4883 1402.81,89.523 1404.95,89.5522 1407.09,89.5543 1409.23,89.5404 1411.37,89.5095 
+  1413.51,89.4378 1415.65,89.3809 1417.79,89.3381 1419.93,89.2744 1422.07,89.2321 1424.21,89.1838 1426.35,89.1256 1428.49,89.1081 1430.63,89.1563 1432.77,89.1566 
+  1434.91,89.122 1437.05,89.1121 1439.19,89.1373 1441.33,89.1953 1443.47,89.2334 1445.61,89.2522 1447.75,89.2496 1449.89,89.2299 1452.03,89.1712 1454.17,89.2085 
+  1456.31,89.2603 1458.45,89.2956 1460.58,89.3165 1462.72,89.2764 1464.86,89.2476 1467,89.195 1469.14,89.1042 1471.28,89.0818 1473.42,89.1683 1475.56,89.2414 
+  1477.7,89.2929 1479.84,89.3463 1481.98,89.3422 1484.12,89.2966 1486.26,89.182 1488.4,89.086 1490.54,89.1422 1492.68,89.2492 1494.82,89.2911 1496.96,89.3604 
+  1499.1,89.3812 1501.24,89.3368 1503.38,89.2489 1505.52,89.1471 1507.66,89.0837 1509.8,89.0309 1511.94,89.1001 1514.08,89.1434 1516.22,89.1695 1518.36,89.2275 
+  1520.5,89.2778 1522.63,89.3142 1524.77,89.3561 1526.91,89.4032 1529.05,89.487 1531.19,89.5945 1533.33,89.617 1535.47,89.5649 1537.61,89.4903 1539.75,89.3617 
+  1541.89,89.2067 1544.03,89.0959 1546.17,88.9939 1548.31,89.0039 1550.45,89.0463 1552.59,89.0462 1554.73,89.044 1556.87,89.0485 1559.01,89.0366 1561.15,89.0568 
+  1563.29,89.0857 1565.43,89.1234 1567.57,89.1216 1569.71,89.0692 1571.85,89.0403 1573.99,89.0474 1576.13,89.0679 1578.27,89.0645 1580.41,89.1034 1582.55,89.1275 
+  1584.68,89.1346 1586.82,89.1123 1588.96,89.1329 1591.1,89.1685 1593.24,89.1572 1595.38,89.0987 1597.52,89.092 1599.66,89.1607 1601.8,89.1768 1603.94,89.1815 
+  1606.08,89.1649 1608.22,89.1121 1610.36,89.1444 1612.5,89.1523 1614.64,89.1388 1616.78,89.0601 1618.92,88.9669 1621.06,89.0793 1623.2,89.1742 1625.34,89.1671 
+  1627.48,89.1007 1629.62,89.0215 1631.76,88.9989 1633.9,89.018 1636.04,89.0593 1638.18,89.1091 1640.32,89.1192 1642.46,89.1672 1644.6,89.2461 1646.73,89.2985 
+  1648.87,89.2763 1651.01,89.2426 1653.15,89.1811 1655.29,89.1117 1657.43,89.0143 1659.57,88.9956 1661.71,89.1323 1663.85,89.2808 1665.99,89.3893 1668.13,89.4242 
+  1670.27,89.4043 1672.41,89.3399 1674.55,89.2679 1676.69,89.222 1678.83,89.1953 1680.97,89.2131 1683.11,89.201 1685.25,89.1936 1687.39,89.1708 1689.53,89.1186 
+  1691.67,89.1087 1693.81,89.1217 1695.95,89.162 1698.09,89.1717 1700.23,89.1397 1702.37,89.1338 1704.51,89.1635 1706.64,89.208 1708.78,89.2003 1710.92,89.1596 
+  1713.06,89.0872 1715.2,89.0439 1717.34,89.1386 1719.48,89.194 1721.62,89.2328 1723.76,89.259 1725.9,89.2482 1728.04,89.2217 1730.18,89.2532 1732.32,89.2456 
+  1734.46,89.1932 1736.6,89.1783 1738.74,89.2104 1740.88,89.2303 1743.02,89.1517 1745.16,89.0385 1747.3,89.0254 1749.44,89.0743 1751.58,89.1136 1753.72,89.1172 
+  1755.86,89.0857 1758,89.0395 1760.14,89.0294 1762.28,89.0894 1764.42,89.1257 1766.56,89.1251 1768.69,89.1057 1770.83,89.0719 1772.97,89.099 1775.11,89.1651 
+  1777.25,89.2445 1779.39,89.2675 1781.53,89.2598 1783.67,89.2665 1785.81,89.2339 1787.95,89.1597 1790.09,89.1255 1792.23,89.1498 1794.37,89.2546 1796.51,89.4217 
+  1798.65,89.5523 1800.79,89.6154 1802.93,89.5883 1805.07,89.5734 1807.21,89.5786 1809.35,89.5511 1811.49,89.5243 1813.63,89.4901 1815.77,89.4584 1817.91,89.4079 
+  1820.05,89.3261 1822.19,89.2338 1824.33,89.1774 1826.47,89.1645 1828.61,89.1797 1830.74,89.1764 1832.88,89.1484 1835.02,89.0881 1837.16,89.0386 1839.3,88.9902 
+  1841.44,89.0269 1843.58,89.0205 1845.72,89.0157 1847.86,89.0483 1850,89.069 1852.14,89.1004 1854.28,89.145 1856.42,89.2179 1858.56,89.3294 1860.7,89.3522 
+  1862.84,89.243 1864.98,89.1103 1867.12,89.0332 1869.26,89.0122 1871.4,89.0314 1873.54,89.0922 1875.68,89.1278 1877.82,89.1395 1879.96,89.1234 1882.1,89.0775 
+  1884.24,89.075 1886.38,89.0852 1888.52,89.0246 1890.66,89.0601 1892.79,89.1311 1894.93,89.1782 1897.07,89.1924 1899.21,89.2259 1901.35,89.2683 1903.49,89.2766 
+  1905.63,89.2464 1907.77,89.2271 1909.91,89.2433 1912.05,89.2314 1914.19,89.2624 1916.33,89.3532 1918.47,89.4411 1920.61,89.4634 1922.75,89.4679 1924.89,89.3661 
+  1927.03,89.2491 1929.17,89.1183 1931.31,88.9765 1933.45,88.9994 1935.59,89.05 1937.73,89.0876 1939.87,89.1536 1942.01,89.2179 1944.15,89.212 1946.29,89.2114 
+  1948.43,89.244 1950.57,89.2366 1952.71,89.2069 1954.84,89.1788 1956.98,89.1726 1959.12,89.1835 1961.26,89.2445 1963.4,89.296 1965.54,89.3411 1967.68,89.2855 
+  1969.82,89.2303 1971.96,89.1639 1974.1,89.0654 1976.24,89.0326 1978.38,89.0456 1980.52,89.0484 1982.66,89.0363 1984.8,89.0028 1986.94,88.9819 1989.08,89.0277 
+  1991.22,89.0986 1993.36,89.1748 1995.5,89.2644 1997.64,89.2859 1999.78,89.2781 2001.92,89.2609 2004.06,89.2657 2006.2,89.2684 2008.34,89.2314 2010.48,89.1534 
+  2012.62,89.0332 2014.75,89.0042 2016.89,89.0248 2019.03,89.0138 2021.17,89.0124 2023.31,89.0137 2025.45,89.0568 2027.59,89.0871 2029.73,89.1574 2031.87,89.2654 
+  2034.01,89.2721 2036.15,89.2049 2038.29,89.1709 2040.43,89.1853 2042.57,89.1686 2044.71,89.1311 2046.85,89.0985 2048.99,89.0903 2051.13,89.1414 2053.27,89.1507 
+  2055.41,89.1193 2057.55,89.0411 2059.69,88.9613 2061.83,89.0206 2063.97,89.0676 2066.11,89.0409 2068.25,88.9765 2070.39,88.9898 2072.53,89.0241 2074.67,89.0672 
+  2076.8,89.1339 2078.94,89.1447 2081.08,89.0883 2083.22,89.0433 2085.36,88.9988 2087.5,88.9769 2089.64,88.9958 2091.78,89.0831 2093.92,89.1653 2096.06,89.196 
+  2098.2,89.1682 2100.34,89.1291 2102.48,89.1125 2104.62,89.1358 2106.76,89.1839 2108.9,89.2694 2111.04,89.3676 2113.18,89.394 2115.32,89.3098 2117.46,89.1689 
+  2119.6,89.0731 2121.74,89.0595 2123.88,89.1114 2126.02,89.1916 2128.16,89.2202 2130.3,89.1953 2132.44,89.1973 2134.58,89.2132 2136.72,89.2403 2138.85,89.2133 
+  2140.99,89.1854 2143.13,89.1741 2145.27,89.2016 2147.41,89.2447 2149.55,89.2867 2151.69,89.3303 2153.83,89.4132 2155.97,89.4872 2158.11,89.5396 2160.25,89.5663 
+  2162.39,89.5562 2164.53,89.4955 2166.67,89.4261 2168.81,89.2789 2170.95,89.1081 2173.09,88.9815 2175.23,89.0055 2177.37,89.0261 2179.51,89.0229 2181.65,89.0495 
+  2183.79,89.0845 2185.93,89.0551 2188.07,89.1176 2190.21,89.2847 2192.35,89.3744 2194.49,89.325 2196.63,89.197 2198.77,89.1087 2200.9,89.0619 2203.04,89.1656 
+  2205.18,89.2986 2207.32,89.3437 2209.46,89.3566 2211.6,89.3231 2213.74,89.2813 2215.88,89.2815 2218.02,89.2662 2220.16,89.2262 2222.3,89.1469 2224.44,89.0896 
+  2226.58,89.0164 2228.72,88.9544 2230.86,88.9691 2233,88.9698 2235.14,89.0021 2237.28,88.9969 2239.42,89.0116 2241.56,89.0787 2243.7,89.1761 2245.84,89.196 
+  2247.98,89.142 2250.12,89.1572 2252.26,89.2529 2254.4,89.3458 2256.54,89.4157 2258.68,89.4609 2260.82,89.4967 2262.95,89.4262 2265.09,89.2759 2267.23,89.1313 
+  2269.37,89.0481 2271.51,88.972 2273.65,89.0183 2275.79,89.048 2277.93,89.0565 2280.07,89.0906 2282.21,89.1156 2284.35,89.071 2286.49,89.0644 2288.63,89.0752 
+  
+  "/>
+<path clip-path="url(#clip4700)" d="
+M1989.93 251.724 L2280.76 251.724 L2280.76 130.764 L1989.93 130.764  Z
+  " fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<polyline clip-path="url(#clip4700)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  1989.93,251.724 2280.76,251.724 2280.76,130.764 1989.93,130.764 1989.93,251.724 
+  "/>
+<polyline clip-path="url(#clip4700)" style="stroke:#009af9; stroke-width:4; stroke-opacity:1; fill:none" points="
+  2013.93,191.244 2157.93,191.244 
+  "/>
+<g clip-path="url(#clip4700)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:start;" transform="rotate(0, 2181.93, 208.744)" x="2181.93" y="208.744">y1</text>
+</g>
+</svg>
+<p>and save the results:</p><pre><code class="language-julia">for (k, v) in pairs(iter.trajectory)
+    exper[k] = v
+end
+finish!(exper);</code></pre><pre><code class="language-none">[ Info: Experiment saved to /tmp/pointmass.jlso</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Wednesday 11 December 2019 01:21">Wednesday 11 December 2019</span>. Using Julia version 1.3.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
