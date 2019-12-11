@@ -72,7 +72,7 @@ function make(; clean::Bool=false, builds::TupleN{Symbol} = BUILDS)
     println()
     @info "Generating Docs"
     makedocs(;
-        #modules = [Lyceum, Lyceum.LYCEUM_PACKAGES...],
+        #modules = [Lyceum, Lyceum.LYCEUM_PACKAGES...], # TODO
         format=Documenter.HTML(
             canonical="https://docs.lyceum.ml/dev/",
             prettyurls=!islocalbuild()
