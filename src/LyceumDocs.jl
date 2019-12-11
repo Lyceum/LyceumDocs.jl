@@ -45,7 +45,7 @@ function make(; clean::Bool=false, builds::TupleN{Symbol} = BUILDS)
         error("$STAGING_DIR exists but clean was false")
     end
 
-    config = Dict{String, Any}()
+    config = Dict{String, Any}("execute" => false)
 
     println()
     @info "Building Source Tree"
@@ -73,18 +73,19 @@ function make(; clean::Bool=false, builds::TupleN{Symbol} = BUILDS)
     @info "Generating Docs"
     makedocs(;
         #modules = [Lyceum, Lyceum.LYCEUM_PACKAGES...],
-        format=Documenter.HTML(prettyurls=!islocalbuild()),
+        format=Documenter.HTML(
+            canonical="https://docs.lyceum.ml/dev/",
+            prettyurls=!islocalbuild()
+        ),
         pages = pages,
         sitename = "Lyceum",
         authors = "Colin Summers",
-
+        strict = false, #!islocalbuild(),
         # source/build are specified relative to root
         root = DOCS_DIR,
         build = relpath(BUILD_DIR, DOCS_DIR),
         source = relpath(STAGING_DIR, DOCS_DIR),
-        strict = false #!islocalbuild(),
     )
-
     println()
     @info "Deploying docs"
     deploydocs(

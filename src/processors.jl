@@ -11,12 +11,19 @@ function add_editurl(content::String)
 end
 
 function add_examples_header(content::String)
-    content = """
-    #md # *This example and more are also available as Julia scripts and Jupyter notebooks.*
-    #md # *See [the how-to page](example_howto.md) for more information.*
-    #md #
-    #md # ---
-    #md #
+    """
+    !!! note "Running examples locally"
+        This example and more are also available as Julia scripts and Jupyter notebooks.
+
+        See [the how-to page](example_howto.md) for more information.
+
+    """ * content
+end
+
+function add_title(content::String, title::String)
+    """
+    # $title
+
     """ * content
 end
 
@@ -53,7 +60,6 @@ function preprocess(s::String, doc::Document; config::Dict=Dict())
         s = add_editurl(s)
     elseif doc.kind === :literate
         s = parse_literate(s).body
-        s = add_examples_header(s)
 
         notebook_path = joinpath(PATHS.notebook, rel_base * ".ipynb")
         s = replace(s, "@__NOTEBOOK__" => notebook_path)
@@ -76,9 +82,16 @@ function postprocess(s::String, doc::Document; config::Dict=Dict())
     filename = Literate.filename(abs_src)
     relrepo_path = relpath(abs_src, repo_root)
 
+    s = add_title(s, doc.config[:title])
+
     if doc.kind === :documenter
         s = replace(s, "@__REPO_ROOT_URL__" => get(config, "repo_root_url", "<unknown>"))
+    elseif doc.kind === :literate
+        if :script in doc.config[:builds] || :notebook in doc.config[:builds]
+            s = add_examples_header(s)
+        end
     end
+
 
     s
 end
