@@ -42,14 +42,14 @@ function check_config(config)
 end
 
 function group(root)
-    config = parsefile_config(joinpath(root, "config.jl"))
+    config = parsefile_config(joinpath(root, "_config.jl"))
     inheritconfig!(config, CONFIG_DEFAULTS)
     check_config(config)
 
     grp = Group(root, ".", Node[], config)
 
     for child in readdir(root)
-        if child == "config.jl"
+        if child == "_config.jl"
             continue
         elseif isdir(joinpath(root, child))
             push!(grp.children, group(child, grp))
@@ -62,15 +62,14 @@ end
 
 
 function group(rel_path, parent::Group)
-    config = parsefile_config(joinpath(parent.root, rel_path, "config.jl"))
-    @info config
+    config = parsefile_config(joinpath(parent.root, rel_path, "_config.jl"))
     inheritconfig!(config, parent.config)
     check_config(config)
 
     grp = Group(parent.root, rel_path, Node[], config)
 
     for child in readdir(joinpath(parent.root, rel_path))
-        if child == "config.jl"
+        if child == "_config.jl"
             continue
         else
             child = joinpath(rel_path, child)

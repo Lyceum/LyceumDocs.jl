@@ -49,7 +49,7 @@ weight = 1
 ```
 ````
 
-Each sub-folder should also contain a `config.jl` with `title` and `weight` defined as well, which controls the title and order that the group of sub-pages appears in, as well as any defaults for sub-pages contained within:
+Each sub-folder should also contain a `_config.jl` with `title` and `weight` defined as well, which controls the title and order that the group of sub-pages appears in, as well as any defaults for sub-pages contained within:
 ```
 title = "Home"
 weight = 1
