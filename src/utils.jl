@@ -10,14 +10,11 @@ function process(doc::Document; config=Dict())
     config = deepcopy(config)
 
     haskey(config, "preprocess") && @warn "Overriding preprocess function in config"
-    haskey(config, "postprocess") && @warn "Overriding postprocess function in config"
 
     config = Literate.create_configuration(abs_src, user_config=config, user_kwargs=())
 
     pre = x -> preprocess(x, doc, config=config)
-    post = x -> postprocess(x, doc, config=config)
     config["preprocess"] = pre
-    config["postprocess"] = post
 
     builds = doc.config[:builds]
     paths = map(p->joinpath(STAGING_DIR, p), PATHS)
@@ -25,7 +22,7 @@ function process(doc::Document; config=Dict())
     if doc.kind === :documenter && :markdown in builds
         abs_dst = joinpath(STAGING_DIR, doc.rel_path)
         mkpath(dirname(abs_dst))
-        content = post(pre(read(abs_src, String)))
+        content = pre(read(abs_src, String))
         open(io -> write(io, content), abs_dst, "w")
     else
         if :markdown in builds
