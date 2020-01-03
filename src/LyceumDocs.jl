@@ -15,8 +15,6 @@ const BUILD_DIR = "build"
 const ASSETS_DIR = joinpath(DOCS_DIR, "assets")
 const EXAMPLE_DIR = joinpath(DOCS_DIR, "assets/LyceumExamples")
 
-const BUILDS = (:markdown, :script, :notebook)
-
 const PATHS = begin
     src = "src"
     static = "static"
@@ -37,40 +35,35 @@ include("examples.jl")
 include("package_definition.jl")
 
 
-function make(; clean::Bool=false, builds::TupleN{Symbol} = BUILDS)
+function make(; clean::Bool=false, config=Dict())
     if isdir(STAGING_DIR) && clean
-        @info "Cleaning staging dir ($(STAGING_DIR))"
+        @info "Cleaning staging dir ($(STAGING_DIR))"; println()
         rm(STAGING_DIR, recursive=true, force=true)
     elseif isdir(STAGING_DIR)
         error("$STAGING_DIR exists but clean was false")
     end
 
-    config = Dict{String, Any}("execute" => false)
-
-    println()
     @info "Building Source Tree"
     rootgroup = group(SRC_DIR)
     isempty(rootgroup.children) && error("No source files found in $(SRC_DIR)")
 
-    println()
-    @info "Processing Files"
+    @info "Processing Files"; println()
+    config = Dict("execute" => false)
     process(rootgroup, config=config)
 
-    println()
     pages = build_pages(rootgroup)
     isempty(pages) && error("No generated source files found in $(STAGING_DIR)")
     @info "Pages Index:"
+    println()
     print_pages(pages)
 
-    println()
-    @info "Bundling examples"
+    @info "Bundling examples"; println()
     r, status, _, str = Literate.Documenter.withoutput() do
         bundle_examples()
     end
     status || throw(r)
 
-    println()
-    @info "Generating Docs"
+    @info "Generating Docs"; println()
     makedocs(;
         #modules = [Lyceum, Lyceum.LYCEUM_PACKAGES...], # TODO
         format=Documenter.HTML(
@@ -80,14 +73,15 @@ function make(; clean::Bool=false, builds::TupleN{Symbol} = BUILDS)
         pages = pages,
         sitename = "Lyceum",
         authors = "Colin Summers",
-        strict = false, #!islocalbuild(),
+        strict = false, #!islocalbuild(),  # TODO
+
         # source/build are specified relative to root
         root = DOCS_DIR,
         build = relpath(BUILD_DIR, DOCS_DIR),
         source = relpath(STAGING_DIR, DOCS_DIR),
     )
-    println()
-    @info "Deploying docs"
+
+    @info "Deploying docs"; println()
     deploydocs(
         repo = "github.com/Lyceum/LyceumDocs.jl.git",
         push_preview=true,
