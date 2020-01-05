@@ -66,6 +66,7 @@ function make(; clean::Bool=false, config=Dict())
     @info "Generating Docs"; println()
     makedocs(;
         #modules = [Lyceum, Lyceum.LYCEUM_PACKAGES...], # TODO
+        modules = [LyceumBase],
         format=Documenter.HTML(
             canonical="https://docs.lyceum.ml/dev/",
             prettyurls=!islocalbuild()
