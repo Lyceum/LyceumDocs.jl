@@ -11,33 +11,28 @@ CurrentModule = LyceumBase
 statespace
 getstate!
 getstate
+setstate!
 
-observationspace
+obsspace
 getobs!
 getobs
 
 actionspace
 getaction!
-setaction!
 getaction
+setaction!
 
 rewardspace
 getreward
 
-evaluationspace
+evalspace
 geteval
 
 reset!
 randreset!
 
 step!
-
 isdone
-
-sharedmemory_envs
-
 timestep
-effective_timestep
 
-spaces
 ```

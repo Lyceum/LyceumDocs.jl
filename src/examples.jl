@@ -24,7 +24,7 @@ function create_example_project(dst_example_dir)
         if haskey(lyceumdocs_manifest, name)
             idx = findfirst(x->x["uuid"] == uuid, lyceumdocs_manifest[name])
             info = lyceumdocs_manifest[name][idx]
-            haskey(info, "path") && error("Local path detected for $name")
+            haskey(info, "path") && @warn "Local path detected for $name"
             if haskey(info, "repo-rev")
                 rev = info["repo-rev"]
                 @warn "repo-rev $rev detected for $name"

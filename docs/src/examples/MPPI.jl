@@ -23,7 +23,7 @@ exper = Experiment("/tmp/pointmass.jlso", overwrite=true);
 # about its parameters. **TODO LINK REF**
 env = LyceumMuJoCo.PointMass();
 mppi = MPPI(
-    sharedmemory_envctor = (i)->sharedmemory_envs(LyceumMuJoCo.PointMass, i),
+    sharedmemory_envctor = (i)->tconstruct(LyceumMuJoCo.PointMass, i),
     covar0 = Diagonal(0.001^2*I, size(actionspace(env), 1)),
     lambda = 0.005,
     K =  32,
