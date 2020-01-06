@@ -1,23 +1,23 @@
 function process(group::Group; config = Dict())
     for child in group.children
-        child.config[:active] && process(child, config=config)
+        child.config[:active] && process(child, config = config)
     end
     group
 end
 
-function process(doc::Document; config=Dict())
+function process(doc::Document; config = Dict())
     abs_src = joinpath(doc.root, doc.rel_path)
     config = deepcopy(config)
 
     haskey(config, "preprocess") && @warn "Overriding preprocess function in config"
 
-    config = Literate.create_configuration(abs_src, user_config=config, user_kwargs=())
+    config = Literate.create_configuration(abs_src, user_config = config, user_kwargs = ())
 
-    pre = x -> preprocess(x, doc, config=config)
+    pre = x -> preprocess(x, doc, config = config)
     config["preprocess"] = pre
 
     builds = doc.config[:builds]
-    paths = map(p->joinpath(STAGING_DIR, p), PATHS)
+    paths = map(p -> joinpath(STAGING_DIR, p), PATHS)
 
     if doc.kind === :documenter && :markdown in builds
         abs_dst = joinpath(STAGING_DIR, doc.rel_path)
@@ -28,25 +28,25 @@ function process(doc::Document; config=Dict())
         if :markdown in builds
             abs_dst = joinpath(STAGING_DIR, doc.rel_path)
             mkpath(dirname(abs_dst))
-            Literate.markdown(abs_src, dirname(abs_dst), config=config)
+            Literate.markdown(abs_src, dirname(abs_dst), config = config)
         end
         if :script in builds
             abs_dst = joinpath(paths.script, doc.rel_path)
             mkpath(dirname(abs_dst))
-            Literate.script(abs_src, dirname(abs_dst), config=config)
+            Literate.script(abs_src, dirname(abs_dst), config = config)
         end
         if :notebook in builds
             abs_dst = joinpath(paths.notebook, doc.rel_path)
             mkpath(dirname(abs_dst))
-            Literate.notebook(abs_src, dirname(abs_dst), config=config)
+            Literate.notebook(abs_src, dirname(abs_dst), config = config)
         end
     end
 end
 
 function build_pages(group::Group)
-    pages = filter(x->!isnothing(x), map(_build_pages, group.children))
-    sort!(pages, by=p->p.first)
-    pages = map(p->p.second, pages)
+    pages = filter(x -> !isnothing(x), map(_build_pages, group.children))
+    sort!(pages, by = p -> p.first)
+    pages = map(p -> p.second, pages)
 end
 
 function _build_pages(group::Group)
@@ -55,8 +55,8 @@ function _build_pages(group::Group)
         page = _build_pages(child)
         page !== nothing && push!(pages, page)
     end
-    sort!(pages, by=p->p.first)
-    pages = map(p->p.second, pages)
+    sort!(pages, by = p -> p.first)
+    pages = map(p -> p.second, pages)
     group.config[:weight] => group.config[:short_title] => pages
 end
 
@@ -79,12 +79,12 @@ function indented_println(xs...; indent = 0)
     println(xs...)
 end
 
-function print_pages(index, indent=0)
+function print_pages(index, indent = 0)
     for (title, page_or_section) in index
         if page_or_section isa String
-            indented_println(title, " => ", page_or_section, indent=indent)
+            indented_println(title, " => ", page_or_section, indent = indent)
         else
-            indented_println(title, indent=indent)
+            indented_println(title, indent = indent)
             print_pages(page_or_section, indent + 1)
         end
     end

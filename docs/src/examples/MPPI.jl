@@ -16,19 +16,19 @@ using Plots
 # **TODO LINK REF**
 # Next, we'll define an `Experiment` which we'll use to log the trajectory
 # executed by our controller and save the results to "/tmp/pointmass.jlso".
-exper = Experiment("/tmp/pointmass.jlso", overwrite=true);
+exper = Experiment("/tmp/pointmass.jlso", overwrite = true);
 
 # Then we configure and instantiate of our `PointMass` environment
 # and `MPPI` controller. See the documention for `MPPI` to learn more
 # about its parameters. **TODO LINK REF**
 env = LyceumMuJoCo.PointMass();
 mppi = MPPI(
-    sharedmemory_envctor = (i)->tconstruct(LyceumMuJoCo.PointMass, i),
-    covar0 = Diagonal(0.001^2*I, size(actionspace(env), 1)),
+    sharedmemory_envctor = (i) -> sharedmemory_envs(LyceumMuJoCo.PointMass, i),
+    covar0 = Diagonal(0.001^2 * I, size(actionspace(env), 1)),
     lambda = 0.005,
-    K =  32,
+    K = 32,
     H = 25,
-    gamma = 0.99
+    gamma = 0.99,
 );
 
 # Finally, let's rollout our controller for 1000 timesteps.
@@ -39,7 +39,7 @@ mppi = MPPI(
 # every 100 timesteps.
 #md # For clarity, we do not reproduce these plots here, but you'll
 #md # see them when you run this example locally!
-iter = ControllerIterator(mppi, env; T=1000, plotiter=100);
+iter = ControllerIterator(mppi, env; T = 1000, plotiter = 100);
 for (t, traj) in iter
 end
 

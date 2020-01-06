@@ -1,10 +1,10 @@
-function preprocess(s::String, doc::Document; config::Dict=Dict())
+function preprocess(s::String, doc::Document; config::Dict = Dict())
     # order matters for the following string transformations!
 
     abs_src = joinpath(doc.root, doc.rel_path)
     rel_base = first(splitext(doc.rel_path))
     repo_root = get(config, "repo_root_path", REPO_DIR)
-    repo_root_url =  get(config, "repo_root_url", "<unknown>")
+    repo_root_url = get(config, "repo_root_url", "<unknown>")
     filename = Literate.filename(abs_src)
     relrepo_path = relpath(abs_src, repo_root)
 
@@ -28,7 +28,10 @@ function preprocess(s::String, doc::Document; config::Dict=Dict())
     s = replace(s, "@__FILE_URL__" => "@__REPO_ROOT_URL__/$(relrepo_path)")
     s = replace(s, "@__FILE__" => relrepo_path)
     s = replace(s, "@__EXAMPLES__" => PATHS.examples_tarfile)
-    s = replace(s, "@__EXAMPLES_README__" => read(joinpath(EXAMPLE_DIR, "README.md"), String))
+    s = replace(
+        s,
+        "@__EXAMPLES_README__" => read(joinpath(EXAMPLE_DIR, "README.md"), String),
+    )
 
     s
 end

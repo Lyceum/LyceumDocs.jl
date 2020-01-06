@@ -4,7 +4,7 @@ struct Group <: Node
     root::String
     rel_path::String
     children::Vector{Node}
-    config::Dict{Symbol, Any}
+    config::Dict{Symbol,Any}
     function Group(root, rel_path, children, config)
         d = joinpath(root, rel_path)
         isdir(d) || throw(ArgumentError("Not a directory: $d"))
@@ -17,7 +17,7 @@ struct Document <: Node
     root::String
     rel_path::String
     kind::Symbol
-    config::Dict{Symbol, Any}
+    config::Dict{Symbol,Any}
     function Document(root, rel_path, children, config)
         f = joinpath(root, rel_path)
         isfile(f) || throw(ArgumentError("Not a file: $f"))
@@ -30,47 +30,13 @@ end
 const BUILDS = (:markdown, :script, :notebook)
 
 const CONFIG_DEFAULTS = Dict(
-    :active => nothing,
+    :active => true,
     :builds => BUILDS,
     :hide => false,
     :short_title => :use_title,
     :title => nothing,
-    :weight => nothing
+    :weight => nothing,
 )
-
-
-function inheritconfig!(dst, src)
-    for k in keys(CONFIG_DEFAULTS)
-        if k === :short_title
-            dst[k] = get(dst, k, :use_title)
-        else
-            get(dst, k, nothing) === nothing && (dst[k] = src[k])
-        end
-    end
-end
-
-function check_config(config)
-    c = config
-    _check_type(k, T) = c[k] isa T || error("Config option `$k` must be of type `$T`")
-
-    for k in keys(CONFIG_DEFAULTS)
-        haskey(c, k) || error("Missing config option `$k`")
-    end
-
-    _check_type(:active, Bool)
-    _check_type(:builds, Tuple)
-    for b in c[:builds]
-        b in BUILDS || error("Invalid build option `$b`. Valid options are: $BUILDS")
-    end
-    _check_type(:hide, Bool)
-    _check_type(:title, AbstractString)
-    if c[:short_title] === :use_title
-        c[:short_title] = c[:title]
-    elseif !(c[:short_title] isa AbstractString)
-        error("Config option `$k` must be of type `AbstractString` or `:use_title`")
-    end
-    _check_type(:weight, Integer)
-end
 
 
 
@@ -152,9 +118,9 @@ function parse_documenter(content::String)
             push!(content_blocks, block)
         end
     end
-    config = join(map(b->b.code, body_blocks), '\n') * '\n'
+    config = join(map(b -> b.code, body_blocks), '\n') * '\n'
     body = string(Markdown.MD(content_blocks))
-    (config=config, body=body)
+    (config = config, body = body)
 end
 
 function parse_literate(content::String)
@@ -175,7 +141,7 @@ function parse_literate(content::String)
     else
         config = join(config, '\n') * '\n'
         body = join(body, '\n') * '\n'
-        return (config=config, body=body)
+        return (config = config, body = body)
     end
 end
 
@@ -192,12 +158,49 @@ end
 
 function parse_config(config_block::String)
     mod = execute_block(config_block)
-    config = Dict{Symbol, Any}()
+    config = Dict{Symbol,Any}()
     for k in keys(CONFIG_DEFAULTS)
         isdefined(mod, k) && (config[k] = getfield(mod, k))
     end
     config
 end
+
+
+
+function inheritconfig!(dst, src)
+    for k in keys(CONFIG_DEFAULTS)
+        if k === :short_title
+            dst[k] = get(dst, k, :use_title)
+        else
+            get(dst, k, nothing) === nothing && (dst[k] = src[k])
+        end
+    end
+end
+
+function check_config(config)
+    c = config
+    _check_type(k, T) = c[k] isa T || error("Config option `$k` must be of type `$T`")
+
+    for k in keys(CONFIG_DEFAULTS)
+        haskey(c, k) || error("Missing config option `$k`")
+    end
+
+    _check_type(:active, Bool)
+    _check_type(:builds, Tuple)
+    for b in c[:builds]
+        b in BUILDS || error("Invalid build option `$b`. Valid options are: $BUILDS")
+    end
+    _check_type(:hide, Bool)
+    _check_type(:title, AbstractString)
+    if c[:short_title] === :use_title
+        c[:short_title] = c[:title]
+    elseif !(c[:short_title] isa AbstractString)
+        error("Config option `$k` must be of type `AbstractString` or `:use_title`")
+    end
+    _check_type(:weight, Integer)
+end
+
+
 
 ismarkdown(path, content) = endswith(path, ".md")
 isliterate(path, content) = endswith(path, ".jl")

@@ -29,83 +29,99 @@ end
 
 const LYCEUM_PACKAGE_DEFS = [
     PackageDefinition(
-        "Lyceum", "https://github.com/Lyceum/Lyceum.jl",
+        "Lyceum",
+        "https://github.com/Lyceum/Lyceum.jl",
         [
             "stable" => "https://lyceum.github.io/Lyceum.jl/stable/",
             "dev" => "https://lyceum.github.io/Lyceum.jl/dev/",
         ],
         [
-            "https://github.com/Lyceum/Lyceum.jl/workflows/CI/badge.svg" => "https://github.com/Lyceum/Lyceum.jl/actions",
-        ]
+            "https://github.com/Lyceum/Lyceum.jl/workflows/CI/badge.svg" =>
+                "https://github.com/Lyceum/Lyceum.jl/actions",
+        ],
     ),
     PackageDefinition(
-        "LyceumBase", "https://github.com/Lyceum/LyceumBase.jl",
+        "LyceumBase",
+        "https://github.com/Lyceum/LyceumBase.jl",
         [
             "stable" => "https://lyceum.github.io/LyceumBase.jl/stable/",
             "dev" => "https://lyceum.github.io/LyceumBase.jl/dev/",
         ],
         [
-            "https://github.com/Lyceum/LyceumBase.jl/workflows/CI/badge.svg" => "https://github.com/Lyceum/LyceumBase.jl/actions",
-        ]
+            "https://github.com/Lyceum/LyceumBase.jl/workflows/CI/badge.svg" =>
+                "https://github.com/Lyceum/LyceumBase.jl/actions",
+        ],
     ),
     PackageDefinition(
-        "LyceumAI", "https://github.com/Lyceum/LyceumAI.jl",
+        "LyceumAI",
+        "https://github.com/Lyceum/LyceumAI.jl",
         [
             "stable" => "https://lyceum.github.io/LyceumAI.jl/stable/",
             "dev" => "https://lyceum.github.io/LyceumAI.jl/dev/",
         ],
         [
-            "https://github.com/Lyceum/LyceumAI.jl/workflows/CI/badge.svg" => "https://github.com/Lyceum/LyceumAI.jl/actions",
-        ]
+            "https://github.com/Lyceum/LyceumAI.jl/workflows/CI/badge.svg" =>
+                "https://github.com/Lyceum/LyceumAI.jl/actions",
+        ],
     ),
     PackageDefinition(
-        "LyceumMuJoCo", "https://github.com/Lyceum/LyceumMuJoCo.jl",
+        "LyceumMuJoCo",
+        "https://github.com/Lyceum/LyceumMuJoCo.jl",
         [
             "stable" => "https://lyceum.github.io/LyceumMuJoCo.jl/stable/",
             "dev" => "https://lyceum.github.io/LyceumMuJoCo.jl/dev/",
         ],
         [
-            "https://github.com/Lyceum/LyceumMuJoCo.jl/workflows/CI/badge.svg" => "https://github.com/Lyceum/LyceumMuJoCo.jl/actions",
-        ]
+            "https://github.com/Lyceum/LyceumMuJoCo.jl/workflows/CI/badge.svg" =>
+                "https://github.com/Lyceum/LyceumMuJoCo.jl/actions",
+        ],
     ),
     PackageDefinition(
-        "LyceumViz", "https://github.com/Lyceum/LyceumViz.jl",
+        "LyceumViz",
+        "https://github.com/Lyceum/LyceumViz.jl",
         [
             "stable" => "https://lyceum.github.io/LyceumViz.jl/stable/",
             "dev" => "https://lyceum.github.io/LyceumViz.jl/dev/",
         ],
         [
-            "https://github.com/Lyceum/LyceumViz.jl/workflows/CI/badge.svg" => "https://github.com/Lyceum/LyceumViz.jl/actions",
-        ]
+            "https://github.com/Lyceum/LyceumViz.jl/workflows/CI/badge.svg" =>
+                "https://github.com/Lyceum/LyceumViz.jl/actions",
+        ],
     ),
     PackageDefinition(
-        "Shapes", "https://github.com/Lyceum/Shapes.jl",
+        "Shapes",
+        "https://github.com/Lyceum/Shapes.jl",
         [
             "stable" => "https://lyceum.github.io/Shapes.jl/stable/",
             "dev" => "https://lyceum.github.io/Shapes.jl/dev/",
         ],
         [
-            "https://github.com/Lyceum/Shapes.jl/workflows/CI/badge.svg" => "https://github.com/Lyceum/Shapes.jl/actions",
-        ]
+            "https://github.com/Lyceum/Shapes.jl/workflows/CI/badge.svg" =>
+                "https://github.com/Lyceum/Shapes.jl/actions",
+        ],
     ),
     PackageDefinition(
-        "UniversalLogger", "https://github.com/Lyceum/UniversalLogger.jl",
+        "UniversalLogger",
+        "https://github.com/Lyceum/UniversalLogger.jl",
         [
             "stable" => "https://lyceum.github.io/UniversalLogger.jl/stable/",
             "dev" => "https://lyceum.github.io/UniversalLogger.jl/dev/",
         ],
         [
-            "https://github.com/Lyceum/UniversalLogger.jl/workflows/CI/badge.svg" => "https://github.com/Lyceum/UniversalLogger.jl/actions",
-        ]
+            "https://github.com/Lyceum/UniversalLogger.jl/workflows/CI/badge.svg" =>
+                "https://github.com/Lyceum/UniversalLogger.jl/actions",
+        ],
     ),
     PackageDefinition(
-        "MuJoCo", "https://github.com/Lyceum/MuJoCo.jl",
+        "MuJoCo",
+        "https://github.com/Lyceum/MuJoCo.jl",
         [
             "stable" => "https://lyceum.github.io/MuJoCo.jl/stable/",
             "dev" => "https://lyceum.github.io/MuJoCo.jl/dev/",
         ],
         [
-            "https://github.com/Lyceum/MuJoCo.jl/workflows/CI/badge.svg" => "https://github.com/Lyceum/MuJoCo.jl/actions",
-        ]
+            "https://github.com/Lyceum/MuJoCo.jl/workflows/CI/badge.svg" =>
+                "https://github.com/Lyceum/MuJoCo.jl/actions",
+        ],
     ),
 ]
