@@ -11,7 +11,7 @@ function create_example_project(dst_example_dir)
             delete!(example_project, k)
         end
     end
-    example_project["compat"] = Dict{String, Any}()
+    example_project["compat"] = Dict{String,Any}()
 
     # sync deps/compat with LyceumDocs
     example_project["version"] = lyceumdocs_project["version"]
@@ -22,9 +22,9 @@ function create_example_project(dst_example_dir)
             example_project["compat"][name] = lyceumdocs_project["compat"][name]
         end
         if haskey(lyceumdocs_manifest, name)
-            idx = findfirst(x->x["uuid"] == uuid, lyceumdocs_manifest[name])
+            idx = findfirst(x -> x["uuid"] == uuid, lyceumdocs_manifest[name])
             info = lyceumdocs_manifest[name][idx]
-            haskey(info, "path") && error("Local path detected for $name")
+            haskey(info, "path") && @warn "Local path detected for $name"
             if haskey(info, "repo-rev")
                 rev = info["repo-rev"]
                 @warn "repo-rev $rev detected for $name"
@@ -40,7 +40,7 @@ function create_example_project(dst_example_dir)
     open(joinpath(dst_example_dir, "Project.toml"), "w") do io
         Pkg.TOML.print(io, example_project)
     end
-    rm(joinpath(dst_example_dir, "Manifest.toml"), force=true)
+    rm(joinpath(dst_example_dir, "Manifest.toml"), force = true)
 
     curdir = pwd()
     curproj = Base.active_project()
@@ -57,12 +57,13 @@ end
 
 function bundle_examples()
     Pkg.PlatformEngines.probe_platform_engines!()
-    paths = map(p->joinpath(STAGING_DIR, p), PATHS)
+    paths = map(p -> joinpath(STAGING_DIR, p), PATHS)
     mktempdir() do tmpdir
         proj = mkdir(joinpath(tmpdir, basename(EXAMPLE_DIR)))
         create_example_project(proj)
         isdir(paths.script) && cp(paths.script, joinpath(proj, basename(paths.script)))
-        isdir(paths.notebook) && cp(paths.notebook, joinpath(proj, basename(paths.notebook)))
+        isdir(paths.notebook) &&
+        cp(paths.notebook, joinpath(proj, basename(paths.notebook)))
         run(Pkg.PlatformEngines.gen_package_cmd(tmpdir, paths.examples_tarfile))
     end
 end

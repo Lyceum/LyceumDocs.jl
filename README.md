@@ -19,7 +19,7 @@ Each has their pros and cons, and the syntax is similar enough that switching be
 
 ## Adding documentation
 
-Once you've chosen which syntax you'll use, go ahead and create the respective `.md` (for Documenter) or `.jl` (for Literate) file under `docs/src`. Files within sub-folders denote sub-pages of the parent folder. For example, the following would result in one top-level, `index.md`, along with a single group containing a single sub-page, `foo/bar.jl`:
+Once you've chosen which syntax you'll use, go ahead and create the respective `.md` (for Documenter) or `.jl` (for Literate) file under `docs/src`. Files within sub-folders denote sub-pages of the parent folder. For example, the following would result in one top-level page, `index.md`, along with a single group containing a single sub-page, `foo/bar.jl`:
 
 ```
 index.md
@@ -28,12 +28,12 @@ foo/bar.jl
 
 How a document file is processed and built is controlled by the following parameters:
 
-* `active::Bool`: This document is skipped iff `active` is true. Defaults to `true`.
+* `active::Bool`: This document is skipped iff `active` is false. Defaults to `true`.
 * `builds::Tuple`: Controls what build products should be genereated from this source file. The default is all build products, e.g. `(:markdown, :notebook, :script)`. Note that `:notebook` and `:script` are ignored for Documenter/`.md` source.
-* `hide::Bool`: Whether this page should be displayed in the side bar or not. Defaults to `true`.
+* `hide::Bool`: Whether this page should be displayed in the side bar or not. Defaults to `false`.
 * `title::String`: The title for this document. A Markdown H1 header containing this title is automatically added. Required.
 * `short_title::Union{String, Symbol}`: The title displayed in the sidebar. If set to `:use_title`, then the title defined above is used. Defaults to `:use_title`.
-* `weight::Int`: Controls the order in which pages are displayed in the sidebar. Required.
+* `weight::Int`: Controls the order in which pages are displayed in the sidebar, with the lowest weight page or group appearing first. Required.
 
 For Literate/`.jl` files, this is controlled by a header at the top of the file that looks like:
 ```
@@ -49,7 +49,7 @@ weight = 1
 ```
 ````
 
-Each sub-folder should also contain a `config.jl` with `title` and `weight` defined as well, which controls the title and order that the group of sub-pages appears in, as well as any defaults for sub-pages contained within:
+Each sub-folder should also contain a `_config.jl` with `title` and `weight` defined as well, which controls the title and order that the group of sub-pages appears in, as well as any defaults for sub-pages contained within:
 ```
 title = "Home"
 weight = 1

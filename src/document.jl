@@ -4,52 +4,50 @@ struct Group <: Node
     root::String
     rel_path::String
     children::Vector{Node}
-    config::Dict{Symbol, Any}
+    config::Dict{Symbol,Any}
+    function Group(root, rel_path, children, config)
+        d = joinpath(root, rel_path)
+        isdir(d) || throw(ArgumentError("Not a directory: $d"))
+        check_config(config)
+        new(root, rel_path, children, config)
+    end
 end
 
 struct Document <: Node
     root::String
     rel_path::String
     kind::Symbol
-    config::Dict{Symbol, Any}
+    config::Dict{Symbol,Any}
+    function Document(root, rel_path, children, config)
+        f = joinpath(root, rel_path)
+        isfile(f) || throw(ArgumentError("Not a file: $f"))
+        check_config(config)
+        new(root, rel_path, children, config)
+    end
 end
 
 
+const BUILDS = (:markdown, :script, :notebook)
+
 const CONFIG_DEFAULTS = Dict(
-    :active => nothing,
+    :active => true,
     :builds => BUILDS,
     :hide => false,
     :short_title => :use_title,
     :title => nothing,
-    :weight => nothing
+    :weight => nothing,
 )
 
-function inheritconfig!(dst, src)
-    for k in keys(CONFIG_DEFAULTS)
-        if k === :short_title
-            dst[k] = get(dst, k, :use_title)
-        else
-            get(dst, k, nothing) === nothing && (dst[k] = src[k])
-        end
-    end
-end
 
-function check_config(config)
-    config[:short_title] === :use_title && (config[:short_title] = config[:title])
-    for (k, v) in pairs(config)
-        v === nothing && error("Missing config parameter $k")
-    end
-end
 
 function group(root)
-    config = parsefile_config(joinpath(root, "config.jl"))
+    config = parsefile_config(joinpath(root, "_config.jl"))
     inheritconfig!(config, CONFIG_DEFAULTS)
-    check_config(config)
 
     grp = Group(root, ".", Node[], config)
 
     for child in readdir(root)
-        if child == "config.jl"
+        if child == "_config.jl"
             continue
         elseif isdir(joinpath(root, child))
             push!(grp.children, group(child, grp))
@@ -60,17 +58,14 @@ function group(root)
     grp
 end
 
-
 function group(rel_path, parent::Group)
-    config = parsefile_config(joinpath(parent.root, rel_path, "config.jl"))
-    @info config
+    config = parsefile_config(joinpath(parent.root, rel_path, "_config.jl"))
     inheritconfig!(config, parent.config)
-    check_config(config)
 
     grp = Group(parent.root, rel_path, Node[], config)
 
     for child in readdir(joinpath(parent.root, rel_path))
-        if child == "config.jl"
+        if child == "_config.jl"
             continue
         else
             child = joinpath(rel_path, child)
@@ -85,16 +80,14 @@ function group(rel_path, parent::Group)
 end
 
 function document(rel_path, parent::Group)
-    kind, config, body = parse_file(joinpath(parent.root, rel_path))
+    kind, config, body = parsefile(joinpath(parent.root, rel_path))
     inheritconfig!(config, parent.config)
-    check_config(config)
-    @info config
-
     Document(parent.root, rel_path, kind, config)
 end
 
 
-function parse_file(path)
+
+function parsefile(path)
     try
         content = read(path, String)
         if isliterate(path, content)
@@ -115,7 +108,6 @@ function parse_file(path)
     end
 end
 
-
 function parse_documenter(content::String)
     md = Markdown.parse(content)
     body_blocks, content_blocks = Markdown.Code[], []
@@ -126,11 +118,10 @@ function parse_documenter(content::String)
             push!(content_blocks, block)
         end
     end
-    config = join(map(b->b.code, body_blocks), '\n') * '\n'
+    config = join(map(b -> b.code, body_blocks), '\n') * '\n'
     body = string(Markdown.MD(content_blocks))
-    (config=config, body=body)
+    (config = config, body = body)
 end
-
 
 function parse_literate(content::String)
     lines = collect(eachline(IOBuffer(content)))
@@ -150,7 +141,7 @@ function parse_literate(content::String)
     else
         config = join(config, '\n') * '\n'
         body = join(body, '\n') * '\n'
-        return (config=config, body=body)
+        return (config = config, body = body)
     end
 end
 
@@ -167,12 +158,49 @@ end
 
 function parse_config(config_block::String)
     mod = execute_block(config_block)
-    config = Dict{Symbol, Any}()
+    config = Dict{Symbol,Any}()
     for k in keys(CONFIG_DEFAULTS)
         isdefined(mod, k) && (config[k] = getfield(mod, k))
     end
     config
 end
+
+
+
+function inheritconfig!(dst, src)
+    for k in keys(CONFIG_DEFAULTS)
+        if k === :short_title
+            dst[k] = get(dst, k, :use_title)
+        else
+            get(dst, k, nothing) === nothing && (dst[k] = src[k])
+        end
+    end
+end
+
+function check_config(config)
+    c = config
+    _check_type(k, T) = c[k] isa T || error("Config option `$k` must be of type `$T`")
+
+    for k in keys(CONFIG_DEFAULTS)
+        haskey(c, k) || error("Missing config option `$k`")
+    end
+
+    _check_type(:active, Bool)
+    _check_type(:builds, Tuple)
+    for b in c[:builds]
+        b in BUILDS || error("Invalid build option `$b`. Valid options are: $BUILDS")
+    end
+    _check_type(:hide, Bool)
+    _check_type(:title, AbstractString)
+    if c[:short_title] === :use_title
+        c[:short_title] = c[:title]
+    elseif !(c[:short_title] isa AbstractString)
+        error("Config option `$k` must be of type `AbstractString` or `:use_title`")
+    end
+    _check_type(:weight, Integer)
+end
+
+
 
 ismarkdown(path, content) = endswith(path, ".md")
 isliterate(path, content) = endswith(path, ".jl")
