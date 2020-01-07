@@ -47,14 +47,14 @@ function group(root)
     grp = Group(root, ".", Node[], config)
 
     for child in readdir(root)
-        if endswith(child, ".jl") || endswith(child, ".md")
-            if child == "_config.jl"
-                continue
-            elseif isdir(joinpath(root, child))
-                push!(grp.children, group(child, grp))
-            else
-                push!(grp.children, document(child, grp))
-            end
+        println(child)
+        if child == "_config.jl"
+            continue
+        elseif isdir(joinpath(root, child))
+            push!(grp.children, group(child, grp))
+        elseif endswith(child, ".jl") || endswith(child, ".md")
+            println(child)
+            push!(grp.children, document(child, grp))
         end
     end
     grp
@@ -73,7 +73,7 @@ function group(rel_path, parent::Group)
             child = joinpath(rel_path, child)
             if isdir(joinpath(parent.root, child))
                 push!(grp.children, group(child, grp))
-            else
+            elseif endswith(child, ".jl") || endswith(child, ".md")
                 push!(grp.children, document(child, grp))
             end
         end
