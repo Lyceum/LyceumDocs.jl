@@ -47,12 +47,14 @@ function group(root)
     grp = Group(root, ".", Node[], config)
 
     for child in readdir(root)
-        if child == "_config.jl"
-            continue
-        elseif isdir(joinpath(root, child))
-            push!(grp.children, group(child, grp))
-        else
-            push!(grp.children, document(child, grp))
+        if endswith(child, ".jl") || endswith(child, ".md")
+            if child == "_config.jl"
+                continue
+            elseif isdir(joinpath(root, child))
+                push!(grp.children, group(child, grp))
+            else
+                push!(grp.children, document(child, grp))
+            end
         end
     end
     grp
