@@ -14,12 +14,14 @@ using LyceumAI         # For the NPG controller
 using LyceumMuJoCo     # For the Hopper environment
 using LyceumBase.Tools # For the ControllerIterator discussed below
 using Flux             # For our Neural Network Needs
+using Flux: glorot_uniform
+using UniversalLogger
 using Plots
 
 # We first configure and instantiate of our `Hopper` environment to grab useful
 # environment specific values such as the size of the observation and action vectors.
 env = LyceumMuJoCo.HopperV2();
-dobs, dact = length(observationspace(env)), length(actionspace(env))
+dobs, dact = length(observationspace(env)), length(actionspace(env));
 
 # Policy Gradient methods require a policy: a function that takes in the state/observations
 # of the agent, and output an action. a = π(obs).
@@ -36,7 +38,7 @@ policy = DiagGaussianPolicy(multilayer_perceptron(dobs, 32, 32, dact;
                                                   initb=glorot_uniform,
                                                   initb_final=glorot_uniform),
                             zeros(dact))
-policy = paramtype(Float32, policy) # We make sure the Policy is a consistent type
+policy = Flux.paramtype(Float32, policy); # We make sure the Policy is a consistent type
 
 
 
@@ -48,7 +50,7 @@ value = multilayer_perceptron(dobs, 128, 128, 1;
                               σ=Flux.relu,
                               initb=glorot_uniform,
                               initb_final=glorot_uniform)
-value = Flux.paramtype(DT, value) # Again, consistent type; imporant for performance
+value = Flux.paramtype(Float32, value); # Again, consistent type; imporant for performance
 
 
 
@@ -61,7 +63,7 @@ valueloss(bl, X, Y) = Flux.mse(vec(bl(X)), vec(Y))
 valuetrainer = FluxTrainer(optimiser = ADAM(1e-3),
                            szbatch = 64,
                            lossfn = valueloss,
-                           stopcb = s -> s.nepochs > 2)
+                           stopcb = s -> s.nepochs > 2);
 
 
 # The `NaturalPolicyGradient` iterator is a struct that contains relevant data objects
@@ -81,8 +83,7 @@ npg = NaturalPolicyGradient((i)->sharedmemory_envs(LyceumMuJoCo.HopperV2, i),
                             gaelambda = 0.97,
                             norm_step_size = 0.05,
                             Hmax=1000,
-                            N=10000)
-
+                            N=10000);
 
 # Finally, let's spin on our iterator 200 times, plotting every 20 iterations.
 # This lets us break out of the loop if certain conditions are met, or re-start training
@@ -92,7 +93,7 @@ exper = Experiment("/tmp/hopper_example.jlso", overwrite=true)
 lg = ULogger() # walks, talks, and acts like a Julia logger
 for (i, state) in enumerate(npg)
     if i > 200
-        # serialize some stuff and quit
+        ## serialize some stuff and quit
         exper[:policy] = npg.policy
         exper[:value] = npg.value
         exper[:etype] = etype
@@ -101,13 +102,13 @@ for (i, state) in enumerate(npg)
         break
     end
 
-    # log everything in `state` except meanbatch and stocbatch
+    ## log everything in `state` except meanbatch and stocbatch
     push!(lg, :algstate, filter_nt(state, exclude=(:meanbatch, :stocbatch)))
 
     if mod(i, 20) == 0
         x = lg[:algstate]
-        # The following are helper functions for plotting to the terminal.
-        # The first plot renders the 'Eval' function associated with the env.
+        ## The following are helper functions for plotting to the terminal.
+        ## The first plot renders the 'Eval' function associated with the env.
         display(expplot(Line(x[:stocterminal_eval], "StocLastE"),
                         Line(x[:meanterminal_eval], "MeanLastE"),
                         title="NPG Iteration=$i", width=60, height=8
@@ -118,8 +119,8 @@ for (i, state) in enumerate(npg)
                         title="NPG Iteration=$i", width=60, height=8
                        ))
 
-        # The following is timing values for each component of the last iteration.
-        # It's useful to see where the compute is going.
+        ## The following is timing values for each component of the last iteration.
+        ## It's useful to see where the compute is going.
         println("elapsed_sampled  = ", state.elapsed_sampled)
         println("elapsed_gradll   = ", state.elapsed_gradll)
         println("elapsed_vpg      = ", state.elapsed_vpg)
