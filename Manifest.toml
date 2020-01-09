@@ -48,9 +48,9 @@ uuid = "39de3d68-74b9-583c-8d2d-e117c070f3a9"
 version = "0.4.0"
 
 [[BSON]]
-git-tree-sha1 = "4c4fdd4d9935fdd820f3f2a5a33d179f5aaea71e"
+git-tree-sha1 = "e794bd8f3f319218e8c8b46657631bdbea2807ca"
 uuid = "fbb218c0-5317-5bc6-957e-2ee96dd4b1f0"
-version = "0.2.4"
+version = "0.2.5"
 
 [[BangBang]]
 deps = ["Compat", "ConstructionBase", "Future", "InitialValues", "LinearAlgebra", "Requires", "Setfield", "Tables", "ZygoteRules"]
@@ -187,7 +187,9 @@ uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 
 [[DevTools]]
 deps = ["Base64", "BenchmarkTools", "Dates", "GitHub", "HTTP", "JSON", "JuliaFormatter", "LibGit2", "Pkg", "PkgTemplates", "Registrator", "RegistryTools", "SnoopCompile"]
-git-tree-sha1 = "dd3f83cb59b1020e5ae915653979cad73e68d576"
+git-tree-sha1 = "c70393834005fb42f7717b08dba89ac908b4997c"
+repo-rev = "master"
+repo-url = "https://github.com/Lyceum/DevTools.jl.git"
 uuid = "c0099f9a-b73b-11e9-1fa7-371fe55f427b"
 version = "0.1.1"
 
@@ -227,9 +229,9 @@ version = "0.8.1"
 
 [[Documenter]]
 deps = ["Base64", "Dates", "DocStringExtensions", "InteractiveUtils", "JSON", "LibGit2", "Logging", "Markdown", "REPL", "Test", "Unicode"]
-git-tree-sha1 = "0be9bf63e854a2408c2ecd3c600d68d4d87d8a73"
+git-tree-sha1 = "885467cebde4639a3d81953652cc53ff5a73cb87"
 uuid = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
-version = "0.24.2"
+version = "0.24.3"
 
 [[ElasticArrays]]
 git-tree-sha1 = "5b5b7cb8cba44bcf337b8af0a1f3e57c89468660"
@@ -429,9 +431,9 @@ version = "0.3.1"
 
 [[JuliaFormatter]]
 deps = ["CSTParser", "Test", "Tokenize"]
-git-tree-sha1 = "a5a91c75f52c64a6059d83ca9550c2c450e5984e"
+git-tree-sha1 = "1c50e36e8547246d84d3c193901c7fb483c50e19"
 uuid = "98e50ef6-434e-11e9-1051-2b60c6c9e899"
-version = "0.2.2"
+version = "0.2.3"
 
 [[Juno]]
 deps = ["Base64", "Logging", "Media", "Profile", "Test"]
@@ -502,31 +504,31 @@ uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
 [[Lyceum]]
 deps = ["LyceumAI", "LyceumBase", "LyceumMuJoCo", "MuJoCo", "Pkg", "Reexport", "Shapes", "UniversalLogger"]
-git-tree-sha1 = "6bde5a2441f801e4c9a8784b8bacc5fd30015611"
+git-tree-sha1 = "a12aa71f73db3b63a2d991e0ac0b3133af368246"
 repo-rev = "master"
 repo-url = "https://github.com/Lyceum/Lyceum.jl.git"
 uuid = "f25b5985-59c0-418b-a573-42c079f3f644"
 version = "0.1.0"
 
 [[LyceumAI]]
-deps = ["Base64", "Distances", "EllipsisNotation", "FastClosures", "Flux", "Future", "IterativeSolvers", "LearnBase", "LinearAlgebra", "LyceumBase", "MLDataPattern", "MacroTools", "MuJoCo", "MuJoCo_jll", "Parameters", "Random", "Shapes", "StaticArrays", "Statistics", "UniversalLogger", "UnsafeArrays", "Zygote"]
-git-tree-sha1 = "ad98a7dd517280bb9ff9df2ee16c10802a662371"
+deps = ["Base64", "Distances", "EllipsisNotation", "FastClosures", "Flux", "Future", "IterativeSolvers", "LearnBase", "LinearAlgebra", "LyceumBase", "LyceumMuJoCo", "MLDataPattern", "MacroTools", "MuJoCo", "MuJoCo_jll", "Parameters", "Random", "Shapes", "StaticArrays", "Statistics", "UniversalLogger", "UnsafeArrays", "Zygote"]
+git-tree-sha1 = "156631a5bdc36e777f381d4116d99ba75bf42fad"
 repo-rev = "master"
 repo-url = "https://github.com/Lyceum/LyceumAI.jl.git"
 uuid = "6917c76a-ac01-4302-a33e-8c456ab70f71"
 version = "0.1.0"
 
 [[LyceumBase]]
-deps = ["Adapt", "Dates", "ElasticArrays", "EllipsisNotation", "Future", "InteractiveUtils", "JLSO", "LibGit2", "LinearAlgebra", "Logging", "MacroTools", "Parameters", "Pkg", "Random", "Shapes", "StaticArrays", "Statistics", "UnicodePlots", "UniversalLogger", "UnsafeArrays"]
-git-tree-sha1 = "8e578cc891fc32614c031eb9199501904e9eac65"
+deps = ["Adapt", "BenchmarkTools", "Dates", "Distributions", "ElasticArrays", "EllipsisNotation", "Future", "InteractiveUtils", "JLSO", "LibGit2", "LinearAlgebra", "Logging", "MacroTools", "Parameters", "Pkg", "Random", "Shapes", "StaticArrays", "Statistics", "Test", "UnicodePlots", "UniversalLogger", "UnsafeArrays"]
+git-tree-sha1 = "d73c452ce85273e6797731546ea239f5b4c79db3"
 repo-rev = "master"
 repo-url = "https://github.com/Lyceum/LyceumBase.jl.git"
 uuid = "db31fed1-ca1e-4084-8a49-12fae1996a55"
 version = "0.1.0"
 
 [[LyceumMuJoCo]]
-deps = ["AxisArrays", "Distributions", "LinearAlgebra", "LyceumBase", "MuJoCo", "Random", "Reexport", "Shapes", "StaticArrays", "UnsafeArrays"]
-git-tree-sha1 = "47f0f872ce3e0954074d4a0f95c8d7e2bc724b6f"
+deps = ["AxisArrays", "Distances", "Distributions", "LinearAlgebra", "LyceumBase", "MuJoCo", "Random", "Reexport", "Shapes", "StaticArrays", "UnsafeArrays"]
+git-tree-sha1 = "b260cf929c35aa35d33edb7378f5d4ecca34ead9"
 repo-rev = "master"
 repo-url = "https://github.com/Lyceum/LyceumMuJoCo.jl.git"
 uuid = "48b9757e-04b8-4dbf-b6ed-75c13d9e4026"
@@ -604,9 +606,11 @@ version = "0.7.0"
 
 [[MuJoCo]]
 deps = ["AxisArrays", "BangBang", "Base64", "CEnum", "LinearAlgebra", "MacroTools", "MuJoCo_jll", "Reexport", "StaticArrays", "UnsafeArrays"]
-git-tree-sha1 = "c220ece36d09e5773b32bc4a0ccd5df6e54d0d1c"
+git-tree-sha1 = "bd9c05d25347fa3d5476e74442930e561ef548f7"
+repo-rev = "master"
+repo-url = "https://github.com/Lyceum/MuJoCo.jl.git"
 uuid = "93189219-7048-461c-94ec-443a161ed927"
-version = "0.1.0"
+version = "0.1.1"
 
 [[MuJoCo_jll]]
 deps = ["GLEW_jll", "GLFW_jll", "Libdl", "Libglvnd_jll", "Pkg"]
@@ -621,10 +625,10 @@ uuid = "ffc61752-8dc7-55ee-8c37-f3e9cdd09e70"
 version = "1.0.0"
 
 [[Mux]]
-deps = ["AssetRegistry", "Base64", "HTTP", "Hiccup", "Lazy", "Pkg", "Sockets", "Test", "WebSockets"]
-git-tree-sha1 = "5b41f03d63400c290bab4e1a49fb9ac36de1084a"
+deps = ["AssetRegistry", "Base64", "HTTP", "Hiccup", "Lazy", "Pkg", "Sockets", "WebSockets"]
+git-tree-sha1 = "3621676e7f711aca14d783d1bff9ac379d9df6b7"
 uuid = "a975b10e-0019-58db-a62f-e48ff68538c9"
-version = "0.7.0"
+version = "0.7.1"
 
 [[NNlib]]
 deps = ["BinaryProvider", "Libdl", "LinearAlgebra", "Requires", "Statistics"]
@@ -639,9 +643,9 @@ version = "0.3.3"
 
 [[OpenBLAS_jll]]
 deps = ["Libdl", "Pkg"]
-git-tree-sha1 = "27f7e3187464eef76b4b7784b79fe10cb302c75c"
+git-tree-sha1 = "3a6e5767e8ae022871c19162cc3ecd80748bd3dc"
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
-version = "0.3.7+3"
+version = "0.3.7+4"
 
 [[OpenSpecFun_jll]]
 deps = ["Libdl", "Pkg"]
@@ -703,9 +707,9 @@ version = "0.6.1"
 
 [[Plots]]
 deps = ["Base64", "Contour", "Dates", "FFMPEG", "FixedPointNumbers", "GR", "GeometryTypes", "JSON", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "Printf", "REPL", "Random", "RecipesBase", "Reexport", "Requires", "Showoff", "SparseArrays", "Statistics", "StatsBase", "UUIDs"]
-git-tree-sha1 = "70e9bac47b12356d3bb69e9d2d1ab190020421dc"
+git-tree-sha1 = "efbe466a790d7e8a5c4b5ee1601c0c8edc99780b"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-version = "0.28.2"
+version = "0.28.4"
 
 [[Printf]]
 deps = ["Unicode"]
@@ -763,10 +767,10 @@ uuid = "d1eb7eb1-105f-429d-abf5-b0f65cb9e2c4"
 version = "1.1.0"
 
 [[Requires]]
-deps = ["Test"]
-git-tree-sha1 = "f6fbf4ba64d295e146e49e021207993b6b48c7d1"
+deps = ["UUIDs"]
+git-tree-sha1 = "999513b7dea8ac17359ed50ae8ea089e4464e35e"
 uuid = "ae029012-a4dd-5104-9daa-d747884805df"
-version = "0.5.2"
+version = "1.0.0"
 
 [[Rmath]]
 deps = ["BinaryProvider", "Libdl", "Random", "Statistics"]
@@ -787,8 +791,10 @@ uuid = "efcf1570-3423-57d1-acb7-fd33fddbac46"
 version = "0.5.4"
 
 [[Shapes]]
-deps = ["Adapt", "Random", "Requires", "StaticArrays"]
-git-tree-sha1 = "8fb16851e8cb3ea28a3446e024cd47fb0d2e9c4d"
+deps = ["Adapt", "MacroTools", "Random", "Requires", "StaticArrays", "UnsafeArrays"]
+git-tree-sha1 = "66d82ea45eaf561953c1730e35d8ce7e1a67c87c"
+repo-rev = "master"
+repo-url = "https://github.com/Lyceum/Shapes.jl.git"
 uuid = "175de200-b73b-11e9-28b7-9b5b306cec37"
 version = "0.1.0"
 
@@ -931,7 +937,9 @@ version = "1.1.0"
 
 [[UniversalLogger]]
 deps = ["Logging", "PushVectors"]
-git-tree-sha1 = "1e57536d596f90ff2d691012f68483705714beea"
+git-tree-sha1 = "16cd7dfbab8c1a583446a496b869c947d84d9adb"
+repo-rev = "master"
+repo-url = "https://github.com/Lyceum/UniversalLogger.jl.git"
 uuid = "5c5e3362-9445-4819-9f95-51c44c51adeb"
 version = "0.1.0"
 
@@ -1120,10 +1128,16 @@ uuid = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
 version = "0.3.2"
 
 [[ZMQ]]
-deps = ["BinaryProvider", "FileWatching", "Libdl", "Sockets", "Test"]
-git-tree-sha1 = "34e7ac2d1d59d19d0e86bde99f1f02262bfa1613"
+deps = ["FileWatching", "Sockets", "ZeroMQ_jll"]
+git-tree-sha1 = "adb2d52aa12c8284da12714f35d2b21fc3d5b2bb"
 uuid = "c2297ded-f4af-51ae-bb23-16f91089e4e1"
-version = "1.0.0"
+version = "1.2.0"
+
+[[ZeroMQ_jll]]
+deps = ["Libdl", "Pkg"]
+git-tree-sha1 = "a22171d073707dbcc99a1dfefc2c6e823beb9664"
+uuid = "8f1865be-045e-5c20-9c9f-bfbfb0764568"
+version = "4.3.1+0"
 
 [[ZipFile]]
 deps = ["BinaryProvider", "Libdl", "Printf"]
@@ -1139,9 +1153,9 @@ version = "1.2.11+7"
 
 [[Zygote]]
 deps = ["DiffRules", "FFTW", "FillArrays", "ForwardDiff", "IRTools", "InteractiveUtils", "LinearAlgebra", "MacroTools", "NNlib", "NaNMath", "Random", "Requires", "SpecialFunctions", "Statistics", "ZygoteRules"]
-git-tree-sha1 = "e353adc2b1026114c7ba2a112f8317dd054644c2"
+git-tree-sha1 = "7e293d7bef87c2cf2847e99ed0da4edadb75fe90"
 uuid = "e88e6eb3-aa80-5325-afca-941959d7151f"
-version = "0.4.3"
+version = "0.4.4"
 
 [[ZygoteRules]]
 deps = ["MacroTools"]

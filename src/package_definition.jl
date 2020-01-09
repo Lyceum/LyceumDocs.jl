@@ -77,15 +77,15 @@ const LYCEUM_PACKAGE_DEFS = [
         ],
     ),
     PackageDefinition(
-        "LyceumViz",
-        "https://github.com/Lyceum/LyceumViz.jl",
+        "LyceumMuJoCoViz",
+        "https://github.com/Lyceum/LyceumMuJoCoViz.jl",
         [
-            "stable" => "https://lyceum.github.io/LyceumViz.jl/stable/",
-            "dev" => "https://lyceum.github.io/LyceumViz.jl/dev/",
+            "stable" => "https://lyceum.github.io/LyceumMuJoCoViz.jl/stable/",
+            "dev" => "https://lyceum.github.io/LyceumMuJoCoViz.jl/dev/",
         ],
         [
-            "https://github.com/Lyceum/LyceumViz.jl/workflows/CI/badge.svg" =>
-                "https://github.com/Lyceum/LyceumViz.jl/actions",
+            "https://github.com/Lyceum/LyceumMuJoCoViz.jl/workflows/CI/badge.svg" =>
+                "https://github.com/Lyceum/LyceumMuJoCoViz.jl/actions",
         ],
     ),
     PackageDefinition(
