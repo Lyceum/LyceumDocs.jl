@@ -53,4 +53,4 @@ end
 finish!(exper);
 
 using Test #src
-@test abs(geteval(env)) < 0.01 #src
+@test abs(geteval(env)) < 0.005 #src

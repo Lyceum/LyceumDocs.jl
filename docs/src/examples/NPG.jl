@@ -1,5 +1,5 @@
 #cfg title = "Learning a control policy"
-#cfg weight = 10
+#cfg weight = 11
 
 #md # ## Policy Gradient Example
 # In this example we walk through the process of setting up an experiment
@@ -21,8 +21,9 @@ using Plots
 # We first configure and instantiate of our `Hopper` environment to grab useful
 # environment specific values such as the size of the observation and action vectors.
 env = LyceumMuJoCo.HopperV2();
-dobs, dact = length(observationspace(env)), length(actionspace(env));
+dobs, dact = length(obsspace(env)), length(actionspace(env));
 
+#md # ## Policy Gradient Components
 # Policy Gradient methods require a policy: a function that takes in the state/observations
 # of the agent, and output an action. a = π(obs).
 # In much of Deep RL, the policy takes the form of a neural network, which we instantiate
@@ -75,7 +76,7 @@ valuetrainer = FluxTrainer(optimiser = ADAM(1e-3),
 # number of samples 'N', specified.
 # Multi-threading happens to collect the 'N' samples using as many threads as possible, up to
 # a trajectory length of Hmax.
-npg = NaturalPolicyGradient((i)->sharedmemory_envs(LyceumMuJoCo.HopperV2, i),
+npg = NaturalPolicyGradient((i)->tconstruct(LyceumMuJoCo.HopperV2, i),
                             policy,
                             value,
                             valuetrainer;
@@ -85,18 +86,20 @@ npg = NaturalPolicyGradient((i)->sharedmemory_envs(LyceumMuJoCo.HopperV2, i),
                             Hmax=1000,
                             N=10000);
 
+#md # ## Running Experiments
 # Finally, let's spin on our iterator 200 times, plotting every 20 iterations.
 # This lets us break out of the loop if certain conditions are met, or re-start training
 # manually if needed. We of course wish to track results, so we create an Experiment to
-# which we can save data.
+# which we can save data. We also
+# have useful timing information displayed every 20 iterations to understand CPU performance.
 exper = Experiment("/tmp/hopper_example.jlso", overwrite=true)
 lg = ULogger() # walks, talks, and acts like a Julia logger
 for (i, state) in enumerate(npg)
     if i > 200
         ## serialize some stuff and quit
-        exper[:policy] = npg.policy
-        exper[:value] = npg.value
-        exper[:etype] = etype
+        exper[:policy]     = npg.policy
+        exper[:value]      = npg.value
+        exper[:etype]      = LyceumMuJoCo.HopperV2
         exper[:meanstates] = state.meanbatch
         exper[:stocstates] = state.stocbatch
         break
@@ -111,28 +114,31 @@ for (i, state) in enumerate(npg)
         ## The first plot renders the 'Eval' function associated with the env.
         display(expplot(Line(x[:stocterminal_eval], "StocLastE"),
                         Line(x[:meanterminal_eval], "MeanLastE"),
-                        title="NPG Iteration=$i", width=60, height=8
-                       ))
+                        title="Evaluation Score, Iter=$i", width=60, height=8
+                       ));
 
         display(expplot(Line(x[:stoctraj_reward], "StocR"),
                         Line(x[:meantraj_reward], "MeanR"),
-                        title="NPG Iteration=$i", width=60, height=8
-                       ))
+                        title="Reward, Iter=$i", width=60, height=8
+                       ));
 
         ## The following is timing values for each component of the last iteration.
         ## It's useful to see where the compute is going.
-        println("elapsed_sampled  = ", state.elapsed_sampled)
-        println("elapsed_gradll   = ", state.elapsed_gradll)
-        println("elapsed_vpg      = ", state.elapsed_vpg)
-        println("elapsed_cg       = ", state.elapsed_cg)
-        println("elapsed_valuefit = ", state.elapsed_valuefit)
+        println("elapsed_sampled  = ", state.elapsed_sampled); #md 
+        println("elapsed_gradll   = ", state.elapsed_gradll);  #md 
+        println("elapsed_vpg      = ", state.elapsed_vpg);     #md 
+        println("elapsed_cg       = ", state.elapsed_cg);      #md 
+        println("elapsed_valuefit = ", state.elapsed_valuefit);#md 
     end
 end
 
-# Let's go ahead and plot the final reward trajectory and see how we did:
-plot(lg.meantraj_reward)
+# Let's go ahead and plot the final reward trajectory and see how we did. The two
+# lines is a property of a Policy Gradient method: there is a stochastic policy that takes
+# the actions of the policy and adds noise to explore for better behavior.
+plot!(plot(lg[:algstate][:meantraj_reward], label="Mean Policy", title="HopperV2 Reward"),
+      lg[:algstate][:stoctraj_reward], label="Stochastic Policy")
 
-# and save the log results to the experiment:
+# and save the logged results to the experiment's JLSO
 for (k, v) in get(lg)
     exper[k] = v
 end
