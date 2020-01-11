@@ -24,10 +24,10 @@ exper = Experiment("/tmp/pointmass.jlso", overwrite = true);
 env = LyceumMuJoCo.PointMass();
 mppi = MPPI(
     env_tconstructor = i -> tconstruct(LyceumMuJoCo.PointMass, i),
-    covar0 = Diagonal(0.001^2 * I, size(actionspace(env), 1)),
-    lambda = 0.005,
+    covar0 = Diagonal(0.1^2 * I, size(actionspace(env), 1)),
+    lambda = 0.01,
     K = 32,
-    H = 25,
+    H = 20,
     gamma = 0.99,
 );
 
@@ -39,7 +39,7 @@ mppi = MPPI(
 # every 100 timesteps.
 #md # For clarity, we do not reproduce these plots here, but you'll
 #md # see them when you run this example locally!
-iter = ControllerIterator(mppi, env; T = 1000, plotiter = 100);
+iter = ControllerIterator(mppi, env; T = 300, plotiter = 50);
 for (t, traj) in iter
 end
 
@@ -53,4 +53,4 @@ end
 finish!(exper);
 
 using Test #src
-@test abs(geteval(env)) < 0.001 #src
+@test abs(geteval(env)) < 0.01 #src
