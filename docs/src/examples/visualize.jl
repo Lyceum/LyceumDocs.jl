@@ -43,7 +43,7 @@ function viz_policy(path::AbstractString, etype::Union{Nothing, Type{<:AbstractM
     ## Otherwise, just render states, such as the output of MPPI.
     pol = haskey(x, "policy") ? x["policy"] : nothing
 
-    if pol = nothing
+    if pol == nothing
         visualize(env; trajectories=[x["states"]])
     else
         a = allocate(actionspace(env))
@@ -60,4 +60,5 @@ end
 
 # TODO the following lines are bullshit; don't run on build, add to md scripts and notebook
 #md viz_policy("/tmp/hopper_example.jlso", LyceumMuJoCo.HopperV2)
-#md viz_mppi(mppi, LyceumMuJoCo.PointMass) 
+#md viz_policy("/tmp/opt_humanoid.jlso", Humanoid)
+#md viz_mppi(mppi, LyceumMuJoCo.PointMass())

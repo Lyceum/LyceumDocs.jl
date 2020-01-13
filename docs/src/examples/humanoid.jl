@@ -14,6 +14,7 @@ using LyceumBase, LyceumAI, LyceumMuJoCo, MuJoCo, UniversalLogger, Shapes
 using LyceumBase.Tools
 using Shapes: AbstractVectorShape
 import LyceumBase: tconstruct
+using Plots
 
 
 #md # ## Humanoid Type
@@ -33,7 +34,7 @@ end
 Humanoid() = first(tconstruct(Humanoid, 1))
 function tconstruct(::Type{Humanoid}, n::Integer)
     modelpath = joinpath(@__DIR__, "humanoid.xml")
-    Tuple(Humanoid(s) for s in tconstruct(MJSim, n, modelpath, skip=4))
+    Tuple(Humanoid(s) for s in tconstruct(MJSim, n, modelpath, skip=2))
 end;
 
 
@@ -69,7 +70,6 @@ function LyceumMuJoCo.reset!(env::Humanoid)
     forward!(env.sim)
     env
 end
-
 
 # This reward function uses the `_getheight` helper function above to get the model's height
 # when the function is called. We also specify a target height of 1.25, and penalize the agent
@@ -108,15 +108,15 @@ end
 # Putting the algorithm in a function allows a user to quickly iterate through parameter
 # searching, or using packages such as `Revise` can seemlessly allow for reloading of
 # algorithms in development.
-function hmMPPI(etype=Humanoid; T=100, H=32, K=32)
+function hmMPPI(etype=Humanoid; T=200, H=64, K=64)
     env = etype()
 
     ## The following parameters work well for this get-up tasks, and make work for
     ## other similar tasks, but is not invariant to the model.
     mppi = MPPI(
                 env_tconstructor = i -> tconstruct(etype, i),
-                covar0 = Diagonal(0.2^2*I, size(actionspace(env), 1)),
-                lambda = 0.8,
+                covar0 = Diagonal(0.05^2*I, size(actionspace(env), 1)),
+                lambda = 0.4,
                 H = H,
                 K = K,
                 gamma = 1.0
@@ -138,16 +138,15 @@ function hmMPPI(etype=Humanoid; T=100, H=32, K=32)
     end
     finish!(exper)
 
-    return mppi, savepath
+    return mppi, iter
 end
 
-m, p = hmMPPI()
+m, d = hmMPPI()
 
 #md # ## Checking Results
 # The MPPI algorithm, and any that you develop, can and should use plotting tools
 # to track progress as they go. IF one wanted to review the results after training,
 # or prepare plots for presentations, one can load the data from disk instead.
-using Plots
-x = JLSO.load(p)
-plot!(plot(x["rewards"], label="Inst. Reward", title="Humanoid Standup"),
-      x["evaluations"], label="Evaluation")
+md x = JLSO.load("/tmp/opt_humanoid.jlso") # one can load the results as such
+plot!(plot(d.trajectory.rewards, label="Inst. Reward", title="Humanoid Standup"),
+      d.trajectory.evaluations, label="Evaluation")
