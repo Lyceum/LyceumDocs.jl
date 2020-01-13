@@ -60,7 +60,7 @@ const LAYING_QPOS=[-0.164158, 0.0265899, 0.101116, 0.684044, -0.160277,
 # there's only one field.
 LyceumMuJoCo.getsim(env::Humanoid) = env.sim
 
-# Normally we could rely on MuJoCo to reset the model to the default configuration when the 
+# Normally we could rely on MuJoCo to reset the model to the default configuration when the
 # model XML is loaded; in humanoid.xml's case, it is in a vertical position. To reset the model
 # to our laying down or supine pose, we can copy in the data from the const array above to `d.qpos`.
 # Calling `forward!` here is the same as `mj_forward(m,d)`, for a pure MuJoCo reference.
@@ -92,12 +92,12 @@ end
 # Finally, we can specify an evaluation function. The difference between the eval and reward
 # functions are that we can track a useful value, such as height with `geteval`, but an algorithm
 # like MPPI or NPG may need a shaped function to guide any optimization. Plotting this eval function
-# will show the agent's height over time: this is very useful for reviewing actual desired behavior 
+# will show the agent's height over time: this is very useful for reviewing actual desired behavior
 # regardless of the reward achieved, as it can be used to diagnose reward specification problems.
 # The function signature isn't typed to allow for flexibility with algorithms. In this case,
 # because we know what data we will extract, we can specify that there are two `Any` type inputs
 # that are not labelled just to match the function signature.
-function LyceumMuJoCo.geteval(state, ::Any, ::Any, env::Humanoid) 
+function LyceumMuJoCo.geteval(state, ::Any, ::Any, env::Humanoid)
     return _getheight(statespace(env)(state), env)
 end
 
@@ -147,6 +147,6 @@ m, d = hmMPPI()
 # The MPPI algorithm, and any that you develop, can and should use plotting tools
 # to track progress as they go. IF one wanted to review the results after training,
 # or prepare plots for presentations, one can load the data from disk instead.
-md x = JLSO.load("/tmp/opt_humanoid.jlso") # one can load the results as such
+x = JLSO.load("/tmp/opt_humanoid.jlso") # one can load the results as such
 plot!(plot(d.trajectory.rewards, label="Inst. Reward", title="Humanoid Standup"),
       d.trajectory.evaluations, label="Evaluation")
