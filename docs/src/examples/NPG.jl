@@ -25,8 +25,8 @@ dobs, dact = length(obsspace(env)), length(actionspace(env));
 
 #md # ## Policy Gradient Components
 # Policy Gradient methods require a policy: a function that takes in the state/observations
-# of the agent, and output an action. a = π(obs).
-# In much of Deep RL, the policy takes the form of a neural network, which we instantiate
+# of the agent, and output an action i.e. `action = π(obs)`.
+# In much of Deep RL, the policy takes the form of a neural network which can be built
 # on top of the [Flux.jl](https://github.com/FluxML/Flux.jl) library.
 # The network below is two layers, mapping from our observation space to 32 hidden units,
 # to the second 32 hidden units layer, before emitting a vector of actions. The activations
@@ -46,14 +46,15 @@ policy = DiagGaussianPolicy(
     ),
     zeros(dact),
 )
-policy = Flux.paramtype(Float32, policy); # We make sure the Policy is a consistent type
+# Convert the weights of our policy to `Float32` rather than the default
+# Float64 for performance.
+policy = Flux.paramtype(Float32, policy);
 
 
 
-# This NPG implementation uses Generalized Advantaged Estimation, where we subract the estimate
-# of the current policy's performance from an estimate of the value function on the same inputs.
-# The calculation of the advangate is more stable in for gradient descent. We represent the value
-# function as a neural network as well.
+# This NPG implementation uses [Generalized Advantaged Estimation](https://arxiv.org/pdf/1506.02438.pdf),
+# which requires an estimate of the value function `V(state)`, which we represent using
+# a 2-layer, feedforward neural network.
 value = multilayer_perceptron(
     dobs,
     128,
@@ -63,7 +64,7 @@ value = multilayer_perceptron(
     initb = glorot_uniform,
     initb_final = glorot_uniform,
 )
-value = Flux.paramtype(Float32, value); # Again, consistent type; imporant for performance
+value = Flux.paramtype(Float32, value);
 
 
 
@@ -81,17 +82,17 @@ valuetrainer = FluxTrainer(
 );
 
 
-# The `NaturalPolicyGradient` iterator is a struct that contains relevant data objects
-# for learning a policy. We first pass in a constructor that, given an input Int
-# (in this case the thread ID), will construct an env; this is for thread-safe multi-threading.
-# The policy and value objects are passed as well as a number of parameters; shown here are
-# generally good defaults but could change depending on the environment and problem.
-# Finally, the max trajectory length is set as 'Hmax', and the total
-# number of samples 'N', specified.
-# Multi-threading happens to collect the 'N' samples using as many threads as possible, up to
-# a trajectory length of Hmax.
+# The `NaturalPolicyGradient` iterator is a type that pre-allocates all necesary
+# data structures and performs one gradient update to the policy at each iteration.
+# We first pass in a constructor that given `n` returns `n` instances of `LyceumMuJoCo.HopperV2`,
+# all sharing the same `jlModel`, to allow for performant sampling from our policy.
+# We then pass in the `policy`, `value`, and `valuetrainer` instances constructed above
+# and override a few of the default `NaturalPolicyGradient` parameters: `gamma`, `gaelambda`,
+# and `norm_step_size`. Finally, we set the max trajectory length `Hmax` and total number of
+# samples per iteration, `N`. Under the hood, `NaturalPolicyGradient` will use approximately
+# `div(N, Hmax)` threads to perform the sampling.
 npg = NaturalPolicyGradient(
-    i -> tconstruct(LyceumMuJoCo.HopperV2, i),
+    n -> tconstruct(LyceumMuJoCo.HopperV2, n),
     policy,
     value,
     valuetrainer;
@@ -105,11 +106,11 @@ npg = NaturalPolicyGradient(
 #md # ## Running Experiments
 # Finally, let's spin on our iterator 200 times, plotting every 20 iterations.
 # This lets us break out of the loop if certain conditions are met, or re-start training
-# manually if needed. We of course wish to track results, so we create an Experiment to
-# which we can save data. We also
-# have useful timing information displayed every 20 iterations to understand CPU performance.
+# manually if needed. We of course wish to track results, so we create an `Experiment` to
+# which we can save data. We also have useful timing information displayed every
+# 20 iterations to understand CPU performance.
 exper = Experiment("/tmp/hopper_example.jlso", overwrite = true)
-lg = ULogger() # walks, talks, and acts like a Julia logger
+lg = ULogger() # walks, talks, and acts like a Julia logger. See the docs on UniversalLogger for more info.
 for (i, state) in enumerate(npg)
     if i > 200
         ## serialize some stuff and quit
@@ -127,7 +128,8 @@ for (i, state) in enumerate(npg)
     if mod(i, 20) == 0
         x = lg[:algstate]
         ## The following are helper functions for plotting to the terminal.
-        ## The first plot renders the 'Eval' function associated with the env.
+        ## The first plot displays the eval function for our stochastic
+        ## and mean policy rollouts.
         display(expplot(
             Line(x[:stocterminal_eval], "StocLastE"),
             Line(x[:meanterminal_eval], "MeanLastE"),
@@ -135,7 +137,7 @@ for (i, state) in enumerate(npg)
             width = 60,
             height = 8,
         ))
-
+        ## While the second one similarly plots the reward.
         display(expplot(
             Line(x[:stoctraj_reward], "StocR"),
             Line(x[:meantraj_reward], "MeanR"),
@@ -144,27 +146,26 @@ for (i, state) in enumerate(npg)
             height = 8,
         ))
 
-        ## The following is timing values for each component of the last iteration.
-        ## It's useful to see where the compute is going.
-        println("elapsed_sampled  = ", state.elapsed_sampled) #md
-        println("elapsed_gradll   = ", state.elapsed_gradll)  #md
-        println("elapsed_vpg      = ", state.elapsed_vpg)     #md
-        println("elapsed_cg       = ", state.elapsed_cg)      #md
-        println("elapsed_valuefit = ", state.elapsed_valuefit)#md
+        ## The following are timing values for various parts of the Natural Policy Gradient
+        ## algorithm at the last iteration, useful for finding performance bottlenecks in the algorithm.
+        println("elapsed_sampled  = ", state.elapsed_sampled)
+        println("elapsed_gradll   = ", state.elapsed_gradll)
+        println("elapsed_vpg      = ", state.elapsed_vpg)
+        println("elapsed_cg       = ", state.elapsed_cg)
+        println("elapsed_valuefit = ", state.elapsed_valuefit)
     end
 end
 
-# Let's go ahead and plot the final reward trajectory and see how we did. The two
-# lines is a property of a Policy Gradient method: there is a stochastic policy that takes
-# the actions of the policy and adds noise to explore for better behavior.
+# Let's go ahead and plot the final reward trajectory for our stochastic and mean policies
+# to see how we did.
 plot!(
     plot(lg[:algstate][:meantraj_reward], label = "Mean Policy", title = "HopperV2 Reward"),
     lg[:algstate][:stoctraj_reward],
     label = "Stochastic Policy",
 )
 
-# and save the logged results to the experiment's JLSO
+# and save the logged results to the Experiment
 for (k, v) in get(lg)
     exper[k] = v
 end
-finish!(exper);
+finish!(exper); # flushes everything to disk
