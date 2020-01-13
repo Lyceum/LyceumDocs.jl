@@ -13,6 +13,8 @@ using LyceumMuJoCo # For the PointMass environment
 using LyceumBase.Tools # For the ControllerIterator discussed below
 using Plots
 
+seed_threadrngs!(1) #src
+
 # **TODO LINK REF**
 # Next, we'll define an `Experiment` which we'll use to log the trajectory
 # executed by our controller and save the results to "/tmp/pointmass.jlso".
@@ -27,7 +29,7 @@ mppi = MPPI(
     covar0 = Diagonal(0.1^2 * I, size(actionspace(env), 1)),
     lambda = 0.01,
     K = 32,
-    H = 20,
+    H = 10,
     gamma = 0.99,
 );
 
@@ -53,4 +55,4 @@ end
 finish!(exper);
 
 using Test #src
-@test abs(geteval(env)) < 0.01 #src
+@test abs(geteval(env)) < 0.001 #src
