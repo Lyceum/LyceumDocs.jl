@@ -510,7 +510,7 @@ uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
 [[Lyceum]]
 deps = ["LyceumAI", "LyceumBase", "LyceumMuJoCo", "LyceumMuJoCoViz", "MuJoCo", "Pkg", "Reexport", "Shapes", "UniversalLogger"]
-git-tree-sha1 = "000c3d3879e3d6c75858e5fef87e35a3c3cbe9ae"
+git-tree-sha1 = "eb2e1c22446eaf5b0fa40bed06aa63b1ca68b29d"
 repo-rev = "master"
 repo-url = "https://github.com/Lyceum/Lyceum.jl.git"
 uuid = "f25b5985-59c0-418b-a573-42c079f3f644"
@@ -518,7 +518,7 @@ version = "0.1.0"
 
 [[LyceumAI]]
 deps = ["Base64", "Distances", "EllipsisNotation", "FastClosures", "Flux", "Future", "IterativeSolvers", "LearnBase", "LinearAlgebra", "LyceumBase", "LyceumMuJoCo", "MLDataPattern", "MacroTools", "MuJoCo", "MuJoCo_jll", "Parameters", "Random", "Shapes", "StaticArrays", "Statistics", "UniversalLogger", "UnsafeArrays", "Zygote"]
-git-tree-sha1 = "f748dfe4ba22e54218786d9283a5f46cd8f02123"
+git-tree-sha1 = "93ee466064c5cf1e183f22fa2d5718b12f1a217a"
 repo-rev = "master"
 repo-url = "https://github.com/Lyceum/LyceumAI.jl.git"
 uuid = "6917c76a-ac01-4302-a33e-8c456ab70f71"
@@ -543,6 +543,8 @@ version = "0.1.0"
 [[LyceumMuJoCoViz]]
 deps = ["BangBang", "FFMPEG", "GLFW", "LyceumBase", "LyceumMuJoCo", "MuJoCo", "Observables", "Printf", "Shapes", "StaticArrays"]
 git-tree-sha1 = "de784316d6b39401832a13e931b47fde45e78605"
+repo-rev = "master"
+repo-url = "https://github.com/Lyceum/LyceumMuJoCoViz.jl.git"
 uuid = "409fd311-7925-44f6-a514-6be572b34fdd"
 version = "0.1.0"
 
