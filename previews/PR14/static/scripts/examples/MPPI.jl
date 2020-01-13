@@ -12,7 +12,7 @@ mppi = MPPI(
     covar0 = Diagonal(0.1^2 * I, size(actionspace(env), 1)),
     lambda = 0.01,
     K = 32,
-    H = 20,
+    H = 10,
     gamma = 0.99,
 );
 
