@@ -47,9 +47,8 @@ end;
 # to stand up, thus we need to grab the model's height, as well as record a laying down
 # position that we can use to set the state to. By exploring the model in the REPL or xml
 # we can see that qpos[3] is the index for the z-axis (height) of the root joint.
-# The LAYING_QPOS data was collected externally by posing the model into a supine pose;
-# one can use `simulate.cpp` included with a MuJoCo release to do this, if desired, or
-# use LyceumMuJoCoViz as well.
+# The `LAYING_QPOS` data was collected externally by posing the model into a supine pose;
+# one can either use LyceumMuJoCoViz.jl or `simulate.cpp` included with a MuJoCo release to do this.
 _getheight(shapedstate::ShapedView, ::Humanoid) = shapedstate.qpos[3]
 const LAYING_QPOS = [
     -0.164158,
@@ -83,8 +82,8 @@ const LAYING_QPOS = [
 ];
 
 #md # ## Lyceum API Simple Setup
-# LyceumBase requires access to the underlying simulator, thus any LyceumMuJoCo environments
-# need to point to the correct field in the env struct that is the simulator; in our case here
+# LyceumMuJoCo requires access to the underlying `MJSim` simulator, thus any LyceumMuJoCo environments
+# need to point to the correct field in the env struct that is the simulator; in our case
 # there's only one field.
 LyceumMuJoCo.getsim(env::Humanoid) = env.sim
 
@@ -120,27 +119,24 @@ end
 # Finally, we can specify an evaluation function. The difference between the eval and reward
 # functions are that we can track a useful value, such as height with `geteval`, but an algorithm
 # like MPPI or NPG may need a shaped function to guide any optimization. Plotting this eval function
-# will show the agent's height over time: this is very useful for reviewing actual desired behavior
+# will show the agent's height over time: this is very useful for reviewing actual desired behavior,
 # regardless of the reward achieved, as it can be used to diagnose reward specification problems.
-# The function signature isn't typed to allow for flexibility with algorithms. In this case,
-# because we know what data we will extract, we can specify that there are two `Any` type inputs
-# that are not labelled just to match the function signature.
-function LyceumMuJoCo.geteval(state, ::Any, ::Any, env::Humanoid)
+function LyceumMuJoCo.geteval(state, action, obs, env::Humanoid)
     return _getheight(statespace(env)(state), env)
 end
 
 #md # ## Running Experiments
-# Julia performs better when functions are well scoped. Here we construct the MPPI and
-# ControllerIterator objects within a function so they are not global. The MPPI struct
-# accepts an environment constructor and algorithm parameters, and runs the controller.
-# Putting the algorithm in a function allows a user to quickly iterate through parameter
-# searching, or using packages such as `Revise` can seemlessly allow for reloading of
-# algorithms in development.
+# As discussed in the [Julia performance tips](https://docs.julialang.org/en/v1/manual/performance-tips/),
+# globals can hinder performance. To avoid this, we construct the `MPPI` and `ControllerIterator` instances
+# within a function. This also lets us easily run our experiment with different choices of parameters (e.g. `H`).
+# Like most algorithms in `LyceumAI`, `MPPI` accepts a `thread-aware` environment constructor as well as any algorithm parameters.
+# `MPPI` itself is not iterable, so we wrap it in `ControllerIterator` which simple calls `getaction!(action, state, obs, mppi::MPPI)`
+# for `T` timesteps, while simultaneously plotting and logging the trajectory rollout.
 function hmMPPI(etype = Humanoid; T = 200, H = 64, K = 64)
     env = etype()
 
     ## The following parameters work well for this get-up tasks, and make work for
-    ## other similar tasks, but is not invariant to the model.
+    ## other similar tasks, but are not invariant to the model.
     mppi = MPPI(
         env_tconstructor = i -> tconstruct(etype, i),
         covar0 = Diagonal(0.05^2 * I, size(actionspace(env), 1)),
@@ -155,8 +151,10 @@ function hmMPPI(etype = Humanoid; T = 200, H = 64, K = 64)
     ## MuJoCo models integrated forward in, then one could conceivably run this
     ## MPPI MPC controller interactively...
     @time for (t, traj) in iter
+        # If desired, one can inspect `traj`, `env`, or `mppi` at each timestep.
     end
 
+    # Save our experiment results to a file for later review.
     savepath = "/tmp/opt_humanoid.jlso"
     exper = Experiment(savepath, overwrite = true)
     exper[:etype] = etype
@@ -173,9 +171,9 @@ m, d = hmMPPI()
 
 #md # ## Checking Results
 # The MPPI algorithm, and any that you develop, can and should use plotting tools
-# to track progress as they go. IF one wanted to review the results after training,
+# to track progress as they go. If one wanted to review the results after training,
 # or prepare plots for presentations, one can load the data from disk instead.
-x = JLSO.load("/tmp/opt_humanoid.jlso") # one can load the results as such
+x = JLSO.load("/tmp/opt_humanoid.jlso")
 plot!(
     plot(d.trajectory.rewards, label = "Inst. Reward", title = "Humanoid Standup"),
     d.trajectory.evaluations,
