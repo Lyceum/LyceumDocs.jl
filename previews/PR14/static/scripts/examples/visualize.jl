@@ -9,15 +9,10 @@ function viz_mppi(mppi::MPPI, env::AbstractMuJoCoEnvironment)
     o = allocate(obsspace(env))
     s = allocate(statespace(env))
 
-    ctrlfn =
-        @closure env -> (getstate!(s, env); getaction!(a, s, o, mppi); setaction!(env, a))
-
-    # The above line is functionally the same as:
-    # ctrlfn(env) = begin
-    #     getstate!(s, env)
-    #     getaction!(a, s, o, mppi)
-    #     setaction!(env, a)
-    # end
+    # As discussed in the [Julia performance tips](https://docs.julialang.org/en/v1/manual/performance-tips/),
+    # captured variables (e.g. in a closure) can sometimes hinder performance. To help with that, we use
+    # the suggested `@closure` macro from FastClosures.jl
+    ctrlfn = @closure env -> (getstate!(s, env); getaction!(a, s, o, mppi); setaction!(env, a))
     visualize(env, controller = ctrlfn)
 end
 
