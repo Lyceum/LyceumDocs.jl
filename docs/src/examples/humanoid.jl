@@ -27,12 +27,16 @@ struct Humanoid{S} <: AbstractMuJoCoEnvironment
     sim::S
 end
 
-# The following lines facilliatate construction of the simulation such that multi-threading
-# performance is enabled; we will construct multiple instances of MuJoCo mjData structures
-# which at run time will share the same mjModel struct. Primarily, this points to the xml
-# file and how many mujoco timesteps to skip when doing steps at the environment level.
+# `Humanoid` (and all subtypes of `AbstractEnvironment`) are designed to be used in a single
+# threaded context. To use `Humanoid`, one would simply create `Threads.nthreads()` instances of
+# `Humanoid`. As `Humanoid` only ever uses `jlModel` in a read-only fashion, we can make a
+# performance optimization by sharing a single instance of `jlModel` across each thread, resulting in
+# improved cache efficiency. `LyceumMuJoCo.tconstruct` helps us to do just that by providing a common
+# interface for defining "thread-aware" constructors. Below, we make a call to
+# `tconstruct(MJSim, n, modelpath, skip = 2)` which will construct `n` instances of `MJSim` constructed
+# from `modelpath` and with a `skip` of 2, all sharing the exact same `jlModel` instance.
 Humanoid() = first(tconstruct(Humanoid, 1))
-function tconstruct(::Type{Humanoid}, n::Integer)
+function LyceumMuJoCo.tconstruct(::Type{Humanoid}, n::Integer)
     modelpath = joinpath(@__DIR__, "humanoid.xml")
     Tuple(Humanoid(s) for s in tconstruct(MJSim, n, modelpath, skip = 2))
 end;
