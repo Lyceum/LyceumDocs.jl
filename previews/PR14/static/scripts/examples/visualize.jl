@@ -9,7 +9,8 @@ function viz_mppi(mppi::MPPI, env::AbstractMuJoCoEnvironment)
     o = allocate(obsspace(env))
     s = allocate(statespace(env))
 
-    ctrlfn = @closure env -> (getstate!(s, env); getaction!(a, s, o, mppi); setaction!(env, a))
+    ctrlfn =
+        @closure env -> (getstate!(s, env); getaction!(a, s, o, mppi); setaction!(env, a))
 
     # The above line is functionally the same as:
     # ctrlfn(env) = begin
@@ -17,10 +18,13 @@ function viz_mppi(mppi::MPPI, env::AbstractMuJoCoEnvironment)
     #     getaction!(a, s, o, mppi)
     #     setaction!(env, a)
     # end
-    visualize(env, controller=ctrlfn)
+    visualize(env, controller = ctrlfn)
 end
 
-function viz_policy(path::AbstractString, etype::Union{Nothing, Type{<:AbstractMuJoCoEnvironment}}=nothing)
+function viz_policy(
+    path::AbstractString,
+    etype::Union{Nothing,Type{<:AbstractMuJoCoEnvironment}} = nothing,
+)
     x = JLSO.load(path)
     etype = isnothing(etype) ? x["etype"] : etype
     env = etype() # Load the environment based on what was in the JLSO file.
@@ -32,14 +36,14 @@ function viz_policy(path::AbstractString, etype::Union{Nothing, Type{<:AbstractM
     pol = haskey(x, "policy") ? x["policy"] : nothing
 
     if pol == nothing
-        visualize(env; trajectories=[x["states"]])
+        visualize(env; trajectories = [x["states"]])
     else
         a = allocate(actionspace(env))
         o = allocate(obsspace(env))
         ctrlfn = @closure (env) -> (getobs!(o, env); a .= pol(o); setaction!(env, a))
 
         states = x["stocstates"].states
-        visualize(env, controller=ctrlfn, trajectories=states)
+        visualize(env, controller = ctrlfn, trajectories = states)
     end
 end
 

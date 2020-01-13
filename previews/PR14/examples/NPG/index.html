@@ -7,296 +7,321 @@ using Flux             # For our Neural Network Needs
 using Flux: glorot_uniform
 using UniversalLogger
 using Plots</code></pre><p>We first configure and instantiate of our <code>Hopper</code> environment to grab useful environment specific values such as the size of the observation and action vectors.</p><pre><code class="language-julia">env = LyceumMuJoCo.HopperV2();
-dobs, dact = length(obsspace(env)), length(actionspace(env));</code></pre><h2 id="Policy-Gradient-Components-1"><a class="docs-heading-anchor" href="#Policy-Gradient-Components-1">Policy Gradient Components</a><a class="docs-heading-anchor-permalink" href="#Policy-Gradient-Components-1" title="Permalink"></a></h2><p>Policy Gradient methods require a policy: a function that takes in the state/observations of the agent, and output an action. a = π(obs). In much of Deep RL, the policy takes the form of a neural network, which we instantiate on top of the <a href="https://github.com/FluxML/Flux.jl">Flux.jl</a> library. The network below is two layers, mapping from our observation space to 32 hidden units, to the second 32 hidden units layer, before emitting a vector of actions. The activations are all tanh functions, and we initialize the network with Glorot Uniform initializations. The policy is more than just a feed forward nerual network, however. It&#39;s treated as a stochastic variable, and thus we track the log of the standard deviation of noise to apply to the action sampling; this is final zero vector of size &#39;dact&#39;.</p><pre><code class="language-julia">policy = DiagGaussianPolicy(multilayer_perceptron(dobs, 32, 32, dact;
-                                                  σ=tanh,
-                                                  initb=glorot_uniform,
-                                                  initb_final=glorot_uniform),
-                            zeros(dact))
-policy = Flux.paramtype(Float32, policy); # We make sure the Policy is a consistent type</code></pre><p>This NPG implementation uses Generalized Advantaged Estimation, where we subract the estimate of the current policy&#39;s performance from an estimate of the value function on the same inputs. The calculation of the advangate is more stable in for gradient descent. We represent the value function as a neural network as well.</p><pre><code class="language-julia">value = multilayer_perceptron(dobs, 128, 128, 1;
-                              σ=Flux.relu,
-                              initb=glorot_uniform,
-                              initb_final=glorot_uniform)
-value = Flux.paramtype(Float32, value); # Again, consistent type; imporant for performance</code></pre><pre><code class="language-none">Chain(Dense(11, 128, relu), Dense(128, 128, relu), Dense(128, 1))</code></pre><p>FluxTrainer is an iterator that loops on the Flux object provided. The result at each loop is passed to stopcb below, so you can quit after a number of epochs, convergence, or other criteria; here it&#39;s capped at two epochs as a lambda function.</p><pre><code class="language-julia">valueloss(bl, X, Y) = Flux.mse(vec(bl(X)), vec(Y))
-valuetrainer = FluxTrainer(optimiser = ADAM(1e-3),
-                           szbatch = 64,
-                           lossfn = valueloss,
-                           stopcb = s -&gt; s.nepochs &gt; 2);</code></pre><p>The <code>NaturalPolicyGradient</code> iterator is a struct that contains relevant data objects for learning a policy. We first pass in a constructor that, given an input Int (in this case the thread ID), will construct an env; this is for thread-safe multi-threading. The policy and value objects are passed as well as a number of parameters; shown here are generally good defaults but could change depending on the environment and problem. Finally, the max trajectory length is set as &#39;Hmax&#39;, and the total number of samples &#39;N&#39;, specified. Multi-threading happens to collect the &#39;N&#39; samples using as many threads as possible, up to a trajectory length of Hmax.</p><pre><code class="language-julia">npg = NaturalPolicyGradient((i)-&gt;tconstruct(LyceumMuJoCo.HopperV2, i),
-                            policy,
-                            value,
-                            valuetrainer;
-                            gamma = 0.995,
-                            gaelambda = 0.97,
-                            norm_step_size = 0.05,
-                            Hmax=1000,
-                            N=10000);</code></pre><h2 id="Running-Experiments-1"><a class="docs-heading-anchor" href="#Running-Experiments-1">Running Experiments</a><a class="docs-heading-anchor-permalink" href="#Running-Experiments-1" title="Permalink"></a></h2><p>Finally, let&#39;s spin on our iterator 200 times, plotting every 20 iterations. This lets us break out of the loop if certain conditions are met, or re-start training manually if needed. We of course wish to track results, so we create an Experiment to which we can save data. We also have useful timing information displayed every 20 iterations to understand CPU performance.</p><pre><code class="language-julia">exper = Experiment(&quot;/tmp/hopper_example.jlso&quot;, overwrite=true)
-lg = ULogger() # walks, talks, and acts like a Julia logger
+dobs, dact = length(obsspace(env)), length(actionspace(env));</code></pre><h2 id="Policy-Gradient-Components-1"><a class="docs-heading-anchor" href="#Policy-Gradient-Components-1">Policy Gradient Components</a><a class="docs-heading-anchor-permalink" href="#Policy-Gradient-Components-1" title="Permalink"></a></h2><p>Policy Gradient methods require a policy: a function that takes in the state/observations of the agent, and output an action i.e. <code>action = π(obs)</code>. In much of Deep RL, the policy takes the form of a neural network which can be built on top of the <a href="https://github.com/FluxML/Flux.jl">Flux.jl</a> library. The network below is two layers, mapping from our observation space to 32 hidden units, to the second 32 hidden units layer, before emitting a vector of actions. The activations are all tanh functions, and we initialize the network with Glorot Uniform initializations. The policy is more than just a feed forward nerual network, however. It&#39;s treated as a stochastic variable, and thus we track the log of the standard deviation of noise to apply to the action sampling; this is final zero vector of size &#39;dact&#39;.</p><pre><code class="language-julia">policy = DiagGaussianPolicy(
+    multilayer_perceptron(
+        dobs,
+        32,
+        32,
+        dact;
+        σ = tanh,
+        initb = glorot_uniform,
+        initb_final = glorot_uniform,
+    ),
+    zeros(dact),
+)</code></pre><pre><code class="language-none">LyceumAI.DiagGaussianPolicy{true,Flux.Chain{Tuple{Flux.Dense{typeof(tanh),Array{Float32,2},Array{Float32,1}},Flux.Dense{typeof(tanh),Array{Float32,2},Array{Float32,1}},Flux.Dense{typeof(identity),Array{Float32,2},Array{Float32,1}}}},Array{Float64,1}}(Chain(Dense(11, 32, tanh), Dense(32, 32, tanh), Dense(32, 3)), [0.0, 0.0, 0.0])</code></pre><p>Convert the weights of our policy to <code>Float32</code> rather than the default Float64 for performance.</p><pre><code class="language-julia">policy = Flux.paramtype(Float32, policy);</code></pre><p>This NPG implementation uses <a href="https://arxiv.org/pdf/1506.02438.pdf">Generalized Advantaged Estimation</a>, which requires an estimate of the value function <code>V(state)</code>, which we represent using a 2-layer, feedforward neural network.</p><pre><code class="language-julia">value = multilayer_perceptron(
+    dobs,
+    128,
+    128,
+    1;
+    σ = Flux.relu,
+    initb = glorot_uniform,
+    initb_final = glorot_uniform,
+)
+value = Flux.paramtype(Float32, value);</code></pre><p>FluxTrainer is an iterator that loops on the Flux object provided. The result at each loop is passed to stopcb below, so you can quit after a number of epochs, convergence, or other criteria; here it&#39;s capped at two epochs as a lambda function.</p><pre><code class="language-julia">valueloss(bl, X, Y) = Flux.mse(vec(bl(X)), vec(Y))
+valuetrainer = FluxTrainer(
+    optimiser = ADAM(1e-3),
+    szbatch = 64,
+    lossfn = valueloss,
+    stopcb = s -&gt; s.nepochs &gt; 2,
+);</code></pre><p>The <code>NaturalPolicyGradient</code> iterator is a type that pre-allocates all necesary data structures and performs one gradient update to the policy at each iteration. We first pass in a constructor that given <code>n</code> returns <code>n</code> instances of <code>LyceumMuJoCo.HopperV2</code>, all sharing the same <code>jlModel</code>, to allow for performant sampling from our policy. We then pass in the <code>policy</code>, <code>value</code>, and <code>valuetrainer</code> instances constructed above and override a few of the default <code>NaturalPolicyGradient</code> parameters: <code>gamma</code>, <code>gaelambda</code>, and <code>norm_step_size</code>. Finally, we set the max trajectory length <code>Hmax</code> and total number of samples per iteration, <code>N</code>. Under the hood, <code>NaturalPolicyGradient</code> will use approximately <code>div(N, Hmax)</code> threads to perform the sampling.</p><pre><code class="language-julia">npg = NaturalPolicyGradient(
+    n -&gt; tconstruct(LyceumMuJoCo.HopperV2, n),
+    policy,
+    value,
+    valuetrainer;
+    gamma = 0.995,
+    gaelambda = 0.97,
+    norm_step_size = 0.05,
+    Hmax = 1000,
+    N = 10000,
+);</code></pre><h2 id="Running-Experiments-1"><a class="docs-heading-anchor" href="#Running-Experiments-1">Running Experiments</a><a class="docs-heading-anchor-permalink" href="#Running-Experiments-1" title="Permalink"></a></h2><p>Finally, let&#39;s spin on our iterator 200 times, plotting every 20 iterations. This lets us break out of the loop if certain conditions are met, or re-start training manually if needed. We of course wish to track results, so we create an <code>Experiment</code> to which we can save data. We also have useful timing information displayed every 20 iterations to understand CPU performance.</p><pre><code class="language-julia">exper = Experiment(&quot;/tmp/hopper_example.jlso&quot;, overwrite = true)
+lg = ULogger() # walks, talks, and acts like a Julia logger. See the docs on UniversalLogger for more info.
 for (i, state) in enumerate(npg)
     if i &gt; 200
         # serialize some stuff and quit
-        exper[:policy]     = npg.policy
-        exper[:value]      = npg.value
-        exper[:etype]      = LyceumMuJoCo.HopperV2
+        exper[:policy] = npg.policy
+        exper[:value] = npg.value
+        exper[:etype] = LyceumMuJoCo.HopperV2
         exper[:meanstates] = state.meanbatch
         exper[:stocstates] = state.stocbatch
         break
     end
 
     # log everything in `state` except meanbatch and stocbatch
-    push!(lg, :algstate, filter_nt(state, exclude=(:meanbatch, :stocbatch)))
+    push!(lg, :algstate, filter_nt(state, exclude = (:meanbatch, :stocbatch)))
 
     if mod(i, 20) == 0
         x = lg[:algstate]
         # The following are helper functions for plotting to the terminal.
-        # The first plot renders the &#39;Eval&#39; function associated with the env.
-        display(expplot(Line(x[:stocterminal_eval], &quot;StocLastE&quot;),
-                        Line(x[:meanterminal_eval], &quot;MeanLastE&quot;),
-                        title=&quot;Evaluation Score, Iter=$i&quot;, width=60, height=8
-                       ));
+        # The first plot displays the eval function for our stochastic
+        # and mean policy rollouts.
+        display(expplot(
+            Line(x[:stocterminal_eval], &quot;StocLastE&quot;),
+            Line(x[:meanterminal_eval], &quot;MeanLastE&quot;),
+            title = &quot;Evaluation Score, Iter=$i&quot;,
+            width = 60,
+            height = 8,
+        ))
+        # While the second one similarly plots the reward.
+        display(expplot(
+            Line(x[:stoctraj_reward], &quot;StocR&quot;),
+            Line(x[:meantraj_reward], &quot;MeanR&quot;),
+            title = &quot;Reward, Iter=$i&quot;,
+            width = 60,
+            height = 8,
+        ))
 
-        display(expplot(Line(x[:stoctraj_reward], &quot;StocR&quot;),
-                        Line(x[:meantraj_reward], &quot;MeanR&quot;),
-                        title=&quot;Reward, Iter=$i&quot;, width=60, height=8
-                       ));
-
-        # The following is timing values for each component of the last iteration.
-        # It&#39;s useful to see where the compute is going.
-        println(&quot;elapsed_sampled  = &quot;, state.elapsed_sampled); #md
-        println(&quot;elapsed_gradll   = &quot;, state.elapsed_gradll);  #md
-        println(&quot;elapsed_vpg      = &quot;, state.elapsed_vpg);     #md
-        println(&quot;elapsed_cg       = &quot;, state.elapsed_cg);      #md
-        println(&quot;elapsed_valuefit = &quot;, state.elapsed_valuefit);#md
+        # The following are timing values for various parts of the Natural Policy Gradient
+        # algorithm at the last iteration, useful for finding performance bottlenecks in the algorithm.
+        println(&quot;elapsed_sampled  = &quot;, state.elapsed_sampled)
+        println(&quot;elapsed_gradll   = &quot;, state.elapsed_gradll)
+        println(&quot;elapsed_vpg      = &quot;, state.elapsed_vpg)
+        println(&quot;elapsed_cg       = &quot;, state.elapsed_cg)
+        println(&quot;elapsed_valuefit = &quot;, state.elapsed_valuefit)
     end
 end</code></pre><pre><code class="language-none">┌ Warning: The specified values for size and/or count will result in 16 unused data points
 └ @ MLDataPattern ~/.julia/packages/MLDataPattern/mX21p/src/dataview.jl:204
-elapsed_sampled  = 0.363501904
-elapsed_gradll   = 1.471591775
-elapsed_vpg      = 0.005435223
-elapsed_cg       = 0.084624849
-elapsed_valuefit = 0.770677187
-elapsed_sampled  = 0.35675176
-elapsed_gradll   = 1.506620032
-elapsed_vpg      = 0.004117216
-elapsed_cg       = 0.070182167
-elapsed_valuefit = 0.820259325
-elapsed_sampled  = 0.363494093
-elapsed_gradll   = 1.476428545
-elapsed_vpg      = 0.003630313
-elapsed_cg       = 0.06481963
-elapsed_valuefit = 0.863726872
-elapsed_sampled  = 0.355365095
-elapsed_gradll   = 1.487155291
-elapsed_vpg      = 0.003569712
-elapsed_cg       = 0.074290149
-elapsed_valuefit = 0.75595354
-elapsed_sampled  = 0.367472578
-elapsed_gradll   = 1.488291364
-elapsed_vpg      = 0.003741212
-elapsed_cg       = 0.067411615
-elapsed_valuefit = 0.899652282
-elapsed_sampled  = 0.385434587
-elapsed_gradll   = 1.452363667
-elapsed_vpg      = 0.003576811
-elapsed_cg       = 0.070076215
-elapsed_valuefit = 1.085391041
-elapsed_sampled  = 0.410310124
-elapsed_gradll   = 1.484904625
-elapsed_vpg      = 0.003601211
-elapsed_cg       = 0.068401304
-elapsed_valuefit = 0.849055732
-elapsed_sampled  = 0.389135731
-elapsed_gradll   = 1.487101618
-elapsed_vpg      = 0.004404713
-elapsed_cg       = 0.065101589
-elapsed_valuefit = 0.972733926
-elapsed_sampled  = 0.358039819
-elapsed_gradll   = 1.476794598
-elapsed_vpg      = 0.003460109
-elapsed_cg       = 0.06667019
-elapsed_valuefit = 1.032191935
-elapsed_sampled  = 0.359366005
-elapsed_gradll   = 1.503359303
-elapsed_vpg      = 0.003510009
-elapsed_cg       = 0.068470992
-elapsed_valuefit = 1.05848716</code></pre><p>Let&#39;s go ahead and plot the final reward trajectory and see how we did. The two lines is a property of a Policy Gradient method: there is a stochastic policy that takes the actions of the policy and adds noise to explore for better behavior.</p><pre><code class="language-julia">plot!(plot(lg[:algstate][:meantraj_reward], label=&quot;Mean Policy&quot;, title=&quot;HopperV2 Reward&quot;),
-      lg[:algstate][:stoctraj_reward], label=&quot;Stochastic Policy&quot;)</code></pre><?xml version="1.0" encoding="utf-8"?>
+elapsed_sampled  = 0.37020719
+elapsed_gradll   = 1.506114056
+elapsed_vpg      = 0.003841216
+elapsed_cg       = 0.068947096
+elapsed_valuefit = 0.763423277
+elapsed_sampled  = 0.3501976
+elapsed_gradll   = 1.544993769
+elapsed_vpg      = 0.003557115
+elapsed_cg       = 0.059483337
+elapsed_valuefit = 0.902757709
+elapsed_sampled  = 0.375719216
+elapsed_gradll   = 1.539948495
+elapsed_vpg      = 0.003424813
+elapsed_cg       = 0.06642705
+elapsed_valuefit = 0.916763353
+elapsed_sampled  = 0.366477915
+elapsed_gradll   = 1.57664335
+elapsed_vpg      = 0.003589013
+elapsed_cg       = 0.069373549
+elapsed_valuefit = 1.059563901
+elapsed_sampled  = 0.366566063
+elapsed_gradll   = 1.581079341
+elapsed_vpg      = 0.003755913
+elapsed_cg       = 0.076270463
+elapsed_valuefit = 1.111663229
+elapsed_sampled  = 0.384192981
+elapsed_gradll   = 1.553891977
+elapsed_vpg      = 0.003694712
+elapsed_cg       = 0.061780506
+elapsed_valuefit = 1.090974237
+elapsed_sampled  = 0.364787886
+elapsed_gradll   = 1.580666734
+elapsed_vpg      = 0.003433311
+elapsed_cg       = 0.069405126
+elapsed_valuefit = 1.12918507
+elapsed_sampled  = 0.378186505
+elapsed_gradll   = 1.508895906
+elapsed_vpg      = 0.003650611
+elapsed_cg       = 0.08464077
+elapsed_valuefit = 1.207812748
+elapsed_sampled  = 0.380099292
+elapsed_gradll   = 1.515881453
+elapsed_vpg      = 0.003586711
+elapsed_cg       = 0.068438115
+elapsed_valuefit = 1.186427121
+elapsed_sampled  = 0.363179425
+elapsed_gradll   = 1.524878625
+elapsed_vpg      = 0.00328951
+elapsed_cg       = 0.082441455
+elapsed_valuefit = 1.277877959</code></pre><p>Let&#39;s go ahead and plot the final reward trajectory for our stochastic and mean policies to see how we did.</p><pre><code class="language-julia">plot!(
+    plot(lg[:algstate][:meantraj_reward], label = &quot;Mean Policy&quot;, title = &quot;HopperV2 Reward&quot;),
+    lg[:algstate][:stoctraj_reward],
+    label = &quot;Stochastic Policy&quot;,
+)</code></pre><?xml version="1.0" encoding="utf-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="600" height="400" viewBox="0 0 2400 1600">
 <defs>
-  <clipPath id="clip8900">
+  <clipPath id="clip4800">
     <rect x="0" y="0" width="2400" height="1600"/>
   </clipPath>
 </defs>
-<path clip-path="url(#clip8900)" d="
+<path clip-path="url(#clip4800)" d="
 M0 1600 L2400 1600 L2400 0 L0 0  Z
   " fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
 <defs>
-  <clipPath id="clip8901">
+  <clipPath id="clip4801">
     <rect x="480" y="0" width="1681" height="1600"/>
   </clipPath>
 </defs>
-<path clip-path="url(#clip8900)" d="
+<path clip-path="url(#clip4800)" d="
 M86.9921 1521.01 L2352.76 1521.01 L2352.76 62.9921 L86.9921 62.9921  Z
   " fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
 <defs>
-  <clipPath id="clip8902">
+  <clipPath id="clip4802">
     <rect x="86" y="62" width="2267" height="1459"/>
   </clipPath>
 </defs>
-<polyline clip-path="url(#clip8902)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip4802)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   140.376,1521.01 140.376,62.9921 
   "/>
-<polyline clip-path="url(#clip8902)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip4802)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   677.44,1521.01 677.44,62.9921 
   "/>
-<polyline clip-path="url(#clip8902)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip4802)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   1214.5,1521.01 1214.5,62.9921 
   "/>
-<polyline clip-path="url(#clip8902)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip4802)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   1751.57,1521.01 1751.57,62.9921 
   "/>
-<polyline clip-path="url(#clip8902)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip4802)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   2288.63,1521.01 2288.63,62.9921 
   "/>
-<polyline clip-path="url(#clip8902)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
-  86.9921,1480.34 2352.76,1480.34 
+<polyline clip-path="url(#clip4802)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  86.9921,1481.86 2352.76,1481.86 
   "/>
-<polyline clip-path="url(#clip8902)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
-  86.9921,1056.39 2352.76,1056.39 
+<polyline clip-path="url(#clip4802)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  86.9921,1046.32 2352.76,1046.32 
   "/>
-<polyline clip-path="url(#clip8902)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
-  86.9921,632.435 2352.76,632.435 
+<polyline clip-path="url(#clip4802)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  86.9921,610.782 2352.76,610.782 
   "/>
-<polyline clip-path="url(#clip8902)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
-  86.9921,208.48 2352.76,208.48 
+<polyline clip-path="url(#clip4802)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  86.9921,175.246 2352.76,175.246 
   "/>
-<polyline clip-path="url(#clip8900)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip4800)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   86.9921,1521.01 2352.76,1521.01 
   "/>
-<polyline clip-path="url(#clip8900)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip4800)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   86.9921,1521.01 86.9921,62.9921 
   "/>
-<polyline clip-path="url(#clip8900)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip4800)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   140.376,1521.01 140.376,1503.51 
   "/>
-<polyline clip-path="url(#clip8900)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip4800)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   677.44,1521.01 677.44,1503.51 
   "/>
-<polyline clip-path="url(#clip8900)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip4800)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   1214.5,1521.01 1214.5,1503.51 
   "/>
-<polyline clip-path="url(#clip8900)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip4800)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   1751.57,1521.01 1751.57,1503.51 
   "/>
-<polyline clip-path="url(#clip8900)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip4800)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   2288.63,1521.01 2288.63,1503.51 
   "/>
-<polyline clip-path="url(#clip8900)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
-  86.9921,1480.34 114.181,1480.34 
+<polyline clip-path="url(#clip4800)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  86.9921,1481.86 114.181,1481.86 
   "/>
-<polyline clip-path="url(#clip8900)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
-  86.9921,1056.39 114.181,1056.39 
+<polyline clip-path="url(#clip4800)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  86.9921,1046.32 114.181,1046.32 
   "/>
-<polyline clip-path="url(#clip8900)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
-  86.9921,632.435 114.181,632.435 
+<polyline clip-path="url(#clip4800)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  86.9921,610.782 114.181,610.782 
   "/>
-<polyline clip-path="url(#clip8900)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
-  86.9921,208.48 114.181,208.48 
+<polyline clip-path="url(#clip4800)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  86.9921,175.246 114.181,175.246 
   "/>
-<g clip-path="url(#clip8900)">
+<g clip-path="url(#clip4800)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 140.376, 1575.01)" x="140.376" y="1575.01">0</text>
 </g>
-<g clip-path="url(#clip8900)">
+<g clip-path="url(#clip4800)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 677.44, 1575.01)" x="677.44" y="1575.01">50</text>
 </g>
-<g clip-path="url(#clip8900)">
+<g clip-path="url(#clip4800)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 1214.5, 1575.01)" x="1214.5" y="1575.01">100</text>
 </g>
-<g clip-path="url(#clip8900)">
+<g clip-path="url(#clip4800)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 1751.57, 1575.01)" x="1751.57" y="1575.01">150</text>
 </g>
-<g clip-path="url(#clip8900)">
+<g clip-path="url(#clip4800)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 2288.63, 1575.01)" x="2288.63" y="1575.01">200</text>
 </g>
-<g clip-path="url(#clip8900)">
-<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 1497.84)" x="62.9921" y="1497.84">0</text>
+<g clip-path="url(#clip4800)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 1499.36)" x="62.9921" y="1499.36">0</text>
 </g>
-<g clip-path="url(#clip8900)">
-<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 1073.89)" x="62.9921" y="1073.89">1000</text>
+<g clip-path="url(#clip4800)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 1063.82)" x="62.9921" y="1063.82">1000</text>
 </g>
-<g clip-path="url(#clip8900)">
-<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 649.935)" x="62.9921" y="649.935">2000</text>
+<g clip-path="url(#clip4800)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 628.282)" x="62.9921" y="628.282">2000</text>
 </g>
-<g clip-path="url(#clip8900)">
-<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 225.98)" x="62.9921" y="225.98">3000</text>
+<g clip-path="url(#clip4800)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 192.746)" x="62.9921" y="192.746">3000</text>
 </g>
-<g clip-path="url(#clip8900)">
+<g clip-path="url(#clip4800)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:84px; text-anchor:middle;" transform="rotate(0, 1219.87, 73.2)" x="1219.87" y="73.2">HopperV2 Reward</text>
 </g>
-<polyline clip-path="url(#clip8902)" style="stroke:#009af9; stroke-width:4; stroke-opacity:1; fill:none" points="
-  151.118,1479.7 161.859,1479.56 172.6,1479.74 183.341,1459.28 194.083,1460.35 204.824,1420.53 215.565,1353.6 226.306,1375.11 237.048,1367.46 247.789,1239.43 
-  258.53,1253.36 269.272,1247.45 280.013,1296.45 290.754,1285.2 301.495,1171.89 312.237,1161.2 322.978,1233.6 333.719,1288.18 344.46,1067.17 355.202,1155.37 
-  365.943,1288.72 376.684,1368.24 387.425,1270.41 398.167,1093.24 408.908,1286.31 419.649,1066.84 430.391,1064.1 441.132,1220.87 451.873,1148.59 462.614,1186.85 
-  473.356,1183.1 484.097,1135.89 494.838,1145.89 505.579,1128.9 516.321,953.878 527.062,1247.24 537.803,1069.15 548.545,1075.56 559.286,976.035 570.027,1117.99 
-  580.768,1069.96 591.51,1070.82 602.251,993.54 612.992,954.857 623.733,1131.04 634.475,1101.81 645.216,1136.96 655.957,1102.02 666.699,997.077 677.44,885.645 
-  688.181,1013.15 698.922,1036.68 709.664,1099.72 720.405,1097.72 731.146,1085.67 741.887,840.351 752.629,658.652 763.37,1098.48 774.111,1119.17 784.853,977.692 
-  795.594,1005.47 806.335,832.417 817.076,1106.3 827.818,940.364 838.559,663.08 849.3,968.272 860.041,662.499 870.783,773.074 881.524,944.052 892.265,824.634 
-  903.007,870.737 913.748,994.65 924.489,1038.57 935.23,850.486 945.972,1001.82 956.713,1112.19 967.454,785.071 978.195,745.536 988.937,895.031 999.678,881.355 
-  1010.42,576.607 1021.16,956.196 1031.9,642.967 1042.64,1231.38 1053.38,961.125 1064.13,746.503 1074.87,446.68 1085.61,705.887 1096.35,753.437 1107.09,976.693 
-  1117.83,231.604 1128.57,209.484 1139.31,505.41 1150.06,104.257 1160.8,1116.34 1171.54,199.217 1182.28,435.367 1193.02,991.854 1203.76,974.928 1214.5,926.027 
-  1225.24,995.459 1235.99,370.07 1246.73,959.999 1257.47,977.455 1268.21,1000.89 1278.95,1001.84 1289.69,927.059 1300.43,226.291 1311.17,886.488 1321.92,256.4 
-  1332.66,264.143 1343.4,280.58 1354.14,295.378 1364.88,263.1 1375.62,1291.35 1386.36,254.887 1397.1,332.921 1407.85,420.492 1418.59,1133.64 1429.33,339.152 
-  1440.07,382.959 1450.81,308.461 1461.55,311.425 1472.29,283.824 1483.04,292.425 1493.78,272.186 1504.52,255.996 1515.26,285.641 1526,293.165 1536.74,235.675 
-  1547.48,423.691 1558.22,220.33 1568.97,205.844 1579.71,197.603 1590.45,867.869 1601.19,210.953 1611.93,187.277 1622.67,214.741 1633.41,192.148 1644.15,194.322 
-  1654.9,175.775 1665.64,532.406 1676.38,185.337 1687.12,168.386 1697.86,981.307 1708.6,130.017 1719.34,353.332 1730.08,212.338 1740.83,198.358 1751.57,781.139 
-  1762.31,204.799 1773.05,294.085 1783.79,137.381 1794.53,212.821 1805.27,255.664 1816.01,234.015 1826.76,225.892 1837.5,228.401 1848.24,777.463 1858.98,232.401 
-  1869.72,877.691 1880.46,876.305 1891.2,245.239 1901.94,312.944 1912.69,169.978 1923.43,190.333 1934.17,240.959 1944.91,848.412 1955.65,798.103 1966.39,187.853 
-  1977.13,189.363 1987.87,157.392 1998.62,981.695 2009.36,608.492 2020.1,207.601 2030.84,225.007 2041.58,710.445 2052.32,671.225 2063.06,772.018 2073.81,289.528 
-  2084.55,816.729 2095.29,650.371 2106.03,209.86 2116.77,862.981 2127.51,985.31 2138.25,906.264 2148.99,220.001 2159.74,437.489 2170.48,271.316 2181.22,657.763 
-  2191.96,652.601 2202.7,659.644 2213.44,189.547 2224.18,482.528 2234.92,1107.29 2245.67,180.865 2256.41,167.082 2267.15,163.13 2277.89,309.271 2288.63,560.651 
+<polyline clip-path="url(#clip4802)" style="stroke:#009af9; stroke-width:4; stroke-opacity:1; fill:none" points="
+  151.118,1479.74 161.859,1479.07 172.6,1478.44 183.341,1477.65 194.083,1477.05 204.824,1475.52 215.565,1465.97 226.306,1448.67 237.048,1449.03 247.789,1446.58 
+  258.53,1411.45 269.272,1365.46 280.013,1371.73 290.754,1378.2 301.495,1375.5 312.237,1376.54 322.978,1285.79 333.719,1283.44 344.46,1362.02 355.202,784.316 
+  365.943,721.454 376.684,1347.99 387.425,1364.48 398.167,1370.04 408.908,1365.52 419.649,1360.39 430.391,1391.93 441.132,1390.61 451.873,1332.1 462.614,1336.93 
+  473.356,591.834 484.097,532.362 494.838,508.524 505.579,430.9 516.321,333.32 527.062,517.111 537.803,595.919 548.545,613.998 559.286,516.848 570.027,622.728 
+  580.768,559.283 591.51,455.376 602.251,483.481 612.992,449.762 623.733,461.851 634.475,512.256 645.216,436.493 655.957,395.403 666.699,441.848 677.44,387.551 
+  688.181,329.1 698.922,334.238 709.664,324.397 720.405,361.19 731.146,343.583 741.887,293.201 752.629,345.89 763.37,304.792 774.111,316.571 784.853,329.838 
+  795.594,297.434 806.335,285.594 817.076,312.964 827.818,268.059 838.559,286.038 849.3,305.153 860.041,331.661 870.783,274.028 881.524,276.591 892.265,322.733 
+  903.007,328.008 913.748,306.508 924.489,301.091 935.23,296.705 945.972,283.112 956.713,352.882 967.454,312.216 978.195,260.978 988.937,299.516 999.678,294.907 
+  1010.42,327.652 1021.16,312.232 1031.9,325.099 1042.64,1382.62 1053.38,295.689 1064.13,277.76 1074.87,267.818 1085.61,224.286 1096.35,150.759 1107.09,162.31 
+  1117.83,172.236 1128.57,222.783 1139.31,232.379 1150.06,234.963 1160.8,217.605 1171.54,219.088 1182.28,236.377 1193.02,229.227 1203.76,228.784 1214.5,216.586 
+  1225.24,205.282 1235.99,215.534 1246.73,193.194 1257.47,233.741 1268.21,203.51 1278.95,204.885 1289.69,172.57 1300.43,186.285 1311.17,193.402 1321.92,164.176 
+  1332.66,184.895 1343.4,190.523 1354.14,186.532 1364.88,172.684 1375.62,172.439 1386.36,1276.35 1397.1,1284.1 1407.85,1279.34 1418.59,139.029 1429.33,154.259 
+  1440.07,159.626 1450.81,168.755 1461.55,177.014 1472.29,173.561 1483.04,175.379 1493.78,173.658 1504.52,149.256 1515.26,123.557 1526,150.223 1536.74,209.453 
+  1547.48,215.898 1558.22,207.592 1568.97,171.217 1579.71,145.841 1590.45,163.131 1601.19,169.21 1611.93,1380.54 1622.67,104.257 1633.41,116.055 1644.15,153.339 
+  1654.9,218.452 1665.64,242.427 1676.38,256.389 1687.12,231.165 1697.86,237.198 1708.6,238.971 1719.34,241.863 1730.08,223.957 1740.83,190.338 1751.57,189.588 
+  1762.31,180.449 1773.05,180.573 1783.79,201.624 1794.53,241.918 1805.27,233.811 1816.01,185.262 1826.76,198.871 1837.5,166.426 1848.24,192.662 1858.98,193.635 
+  1869.72,219.283 1880.46,239.687 1891.2,223.994 1901.94,238.68 1912.69,245.506 1923.43,249.233 1934.17,232.505 1944.91,240.03 1955.65,232.622 1966.39,223.35 
+  1977.13,226.312 1987.87,226.467 1998.62,1380.36 2009.36,245.231 2020.1,228.118 2030.84,231.99 2041.58,206.394 2052.32,187.364 2063.06,187.676 2073.81,170.575 
+  2084.55,180.204 2095.29,185.05 2106.03,170.183 2116.77,174.85 2127.51,1381.38 2138.25,1378.74 2148.99,169.704 2159.74,173.121 2170.48,201.24 2181.22,191.978 
+  2191.96,184.642 2202.7,201.849 2213.44,191.462 2224.18,170.586 2234.92,180.592 2245.67,190.354 2256.41,206.179 2267.15,211.766 2277.89,203.404 2288.63,190.592 
   
   "/>
-<polyline clip-path="url(#clip8902)" style="stroke:#e26f46; stroke-width:4; stroke-opacity:1; fill:none" points="
-  151.118,1479.33 161.859,1478.46 172.6,1472.14 183.341,1462.85 194.083,1454.36 204.824,1438.93 215.565,1421.89 226.306,1406.33 237.048,1396.1 247.789,1386.55 
-  258.53,1394.39 269.272,1380.94 280.013,1360.14 290.754,1354.42 301.495,1326.48 312.237,1320.72 322.978,1319.92 333.719,1296.7 344.46,1274.55 355.202,1284.53 
-  365.943,1271.93 376.684,1295.41 387.425,1279.03 398.167,1290.72 408.908,1272.88 419.649,1272.9 430.391,1251.25 441.132,1258.28 451.873,1283.79 462.614,1251.25 
-  473.356,1227.35 484.097,1172.71 494.838,1167.26 505.579,1193.26 516.321,1238.46 527.062,1208.82 537.803,1206.83 548.545,1236.38 559.286,1169.69 570.027,1147.85 
-  580.768,1168.88 591.51,1136.86 602.251,1188.75 612.992,1181.78 623.733,1218.27 634.475,1197.61 645.216,1147 655.957,1182.79 666.699,1158.05 677.44,1132.78 
-  688.181,1135.76 698.922,1103.71 709.664,1104.94 720.405,1042.75 731.146,1123.17 741.887,1192.44 752.629,1149.15 763.37,1062.24 774.111,1121.5 784.853,1135.27 
-  795.594,1059.74 806.335,1067.68 817.076,1107.76 827.818,1098.86 838.559,1036.83 849.3,1096.21 860.041,1055.47 870.783,1042.34 881.524,1003.2 892.265,1045.41 
-  903.007,1038.44 913.748,996.079 924.489,1065.27 935.23,1004.41 945.972,1079.2 956.713,941.561 967.454,878.081 978.195,989.105 988.937,984.05 999.678,1048.06 
-  1010.42,908.734 1021.16,1017.01 1031.9,797.608 1042.64,1025.09 1053.38,817.542 1064.13,910.214 1074.87,858.69 1085.61,801.58 1096.35,860.813 1107.09,979.348 
-  1117.83,982.941 1128.57,802.804 1139.31,944.715 1150.06,749.065 1160.8,945.129 1171.54,924.867 1182.28,1081.18 1193.02,848.991 1203.76,852.483 1214.5,859.488 
-  1225.24,839.014 1235.99,1015.89 1246.73,850.474 1257.47,908.307 1268.21,777.104 1278.95,592.954 1289.69,776.645 1300.43,694.558 1311.17,724.327 1321.92,711.708 
-  1332.66,757.42 1343.4,673.258 1354.14,722.681 1364.88,447.191 1375.62,776.93 1386.36,816.064 1397.1,779.053 1407.85,835.255 1418.59,850.757 1429.33,708.676 
-  1440.07,667.137 1450.81,596.076 1461.55,736.002 1472.29,734.543 1483.04,632.347 1493.78,752.464 1504.52,780.586 1515.26,661.825 1526,808.935 1536.74,555.829 
-  1547.48,790.009 1558.22,781.116 1568.97,766.222 1579.71,753.79 1590.45,988.303 1601.19,381.68 1611.93,666.991 1622.67,590.204 1633.41,632.022 1644.15,1079.33 
-  1654.9,1100.06 1665.64,1036.32 1676.38,770.699 1687.12,892.32 1697.86,897.827 1708.6,759.018 1719.34,962.236 1730.08,729.407 1740.83,807.671 1751.57,579.109 
-  1762.31,833.575 1773.05,685.602 1783.79,594.021 1794.53,738.804 1805.27,574.002 1816.01,629.143 1826.76,602.629 1837.5,711.991 1848.24,840.815 1858.98,697.887 
-  1869.72,718.078 1880.46,646.769 1891.2,632.981 1901.94,715.705 1912.69,490.386 1923.43,650.368 1934.17,706.684 1944.91,944.723 1955.65,742.761 1966.39,974.346 
-  1977.13,1006.59 1987.87,1059.89 1998.62,532.902 2009.36,891.46 2020.1,863.56 2030.84,790.098 2041.58,779.46 2052.32,737.855 2063.06,619.363 2073.81,712.884 
-  2084.55,900.822 2095.29,823.051 2106.03,717.178 2116.77,736.039 2127.51,738.058 2138.25,683.532 2148.99,558.966 2159.74,363.453 2170.48,591.805 2181.22,650.885 
-  2191.96,381.242 2202.7,531.915 2213.44,547.489 2224.18,829.218 2234.92,748.084 2245.67,791.389 2256.41,513.715 2267.15,423.106 2277.89,701.761 2288.63,823.355 
+<polyline clip-path="url(#clip4802)" style="stroke:#e26f46; stroke-width:4; stroke-opacity:1; fill:none" points="
+  151.118,1479.31 161.859,1478.92 172.6,1478.33 183.341,1477.77 194.083,1476.66 204.824,1473.77 215.565,1464.21 226.306,1453.96 237.048,1447.35 247.789,1441.2 
+  258.53,1430.15 269.272,1415.46 280.013,1400.32 290.754,1385.28 301.495,1371.41 312.237,1360.61 322.978,1334.73 333.719,1335.17 344.46,1338.77 355.202,1294.16 
+  365.943,1302.39 376.684,1289.53 387.425,1332.63 398.167,1321.65 408.908,1279.22 419.649,1213.26 430.391,1236.04 441.132,1276.92 451.873,1192.26 462.614,1145.93 
+  473.356,1099.84 484.097,1075.66 494.838,1134.66 505.579,1021.97 516.321,1100.12 527.062,1083.67 537.803,1074.74 548.545,997.862 559.286,967.852 570.027,850.352 
+  580.768,817.3 591.51,840.754 602.251,804.213 612.992,758.809 623.733,813.045 634.475,684.285 645.216,807.892 655.957,727.524 666.699,757.131 677.44,506.218 
+  688.181,700.269 698.922,566.192 709.664,581.688 720.405,691.254 731.146,485.976 741.887,658.883 752.629,641.243 763.37,654.676 774.111,461.933 784.853,506.388 
+  795.594,692.433 806.335,428.006 817.076,855.001 827.818,655.772 838.559,656.212 849.3,651.992 860.041,368.82 870.783,483.476 881.524,479.366 892.265,349.703 
+  903.007,541.81 913.748,529.955 924.489,439.437 935.23,559.283 945.972,622.36 956.713,713.988 967.454,484.463 978.195,704.52 988.937,375.993 999.678,637.263 
+  1010.42,771.866 1021.16,516.672 1031.9,682.256 1042.64,858.095 1053.38,509.021 1064.13,679.41 1074.87,553.026 1085.61,967.991 1096.35,917.154 1107.09,694.147 
+  1117.83,760.284 1128.57,536.998 1139.31,895.868 1150.06,994.204 1160.8,850.095 1171.54,660.02 1182.28,613.303 1193.02,457.936 1203.76,549.334 1214.5,751.594 
+  1225.24,606.761 1235.99,525.26 1246.73,652.557 1257.47,905.742 1268.21,1006.56 1278.95,978.49 1289.69,886.062 1300.43,602.822 1311.17,524.578 1321.92,503.97 
+  1332.66,516.142 1343.4,595.918 1354.14,705.384 1364.88,683.367 1375.62,528.792 1386.36,895.288 1397.1,1090.29 1407.85,1037.97 1418.59,692.546 1429.33,573.287 
+  1440.07,532.328 1450.81,370.133 1461.55,696.083 1472.29,351.971 1483.04,354.852 1493.78,517.247 1504.52,577.893 1515.26,679.151 1526,627.569 1536.74,476.64 
+  1547.48,395.604 1558.22,371.157 1568.97,358.853 1579.71,514.386 1590.45,951.394 1601.19,892.448 1611.93,1129.44 1622.67,1059.15 1633.41,852.671 1644.15,737.447 
+  1654.9,278.523 1665.64,299.703 1676.38,222.702 1687.12,402.731 1697.86,487.728 1708.6,423.139 1719.34,324.159 1730.08,473.497 1740.83,645.645 1751.57,748.034 
+  1762.31,587.121 1773.05,707.168 1783.79,672.427 1794.53,203.017 1805.27,555.736 1816.01,893.805 1826.76,678.601 1837.5,892.318 1848.24,903.716 1858.98,862.277 
+  1869.72,667.202 1880.46,397.465 1891.2,612.798 1901.94,402.648 1912.69,396.64 1923.43,561.025 1934.17,682.42 1944.91,721.397 1955.65,964.47 1966.39,701.056 
+  1977.13,898.837 1987.87,963.424 1998.62,1033.16 2009.36,613.451 2020.1,675.503 2030.84,756.005 2041.58,794.697 2052.32,818.219 2063.06,688.221 2073.81,873.247 
+  2084.55,999.152 2095.29,781.19 2106.03,814.642 2116.77,952.596 2127.51,881.118 2138.25,974.363 2148.99,809.796 2159.74,805.362 2170.48,913.248 2181.22,975.075 
+  2191.96,632.064 2202.7,695.98 2213.44,531.01 2224.18,695.331 2234.92,677.194 2245.67,576.385 2256.41,451.226 2267.15,588.227 2277.89,518.956 2288.63,430.76 
   
   "/>
-<path clip-path="url(#clip8900)" d="
+<path clip-path="url(#clip4800)" d="
 M1676.96 327.952 L2280.76 327.952 L2280.76 146.512 L1676.96 146.512  Z
   " fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
-<polyline clip-path="url(#clip8900)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip4800)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   1676.96,327.952 2280.76,327.952 2280.76,146.512 1676.96,146.512 1676.96,327.952 
   "/>
-<polyline clip-path="url(#clip8900)" style="stroke:#009af9; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip4800)" style="stroke:#009af9; stroke-width:4; stroke-opacity:1; fill:none" points="
   1700.96,206.992 1844.96,206.992 
   "/>
-<g clip-path="url(#clip8900)">
+<g clip-path="url(#clip4800)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:start;" transform="rotate(0, 1868.96, 224.492)" x="1868.96" y="224.492">Mean Policy</text>
 </g>
-<polyline clip-path="url(#clip8900)" style="stroke:#e26f46; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip4800)" style="stroke:#e26f46; stroke-width:4; stroke-opacity:1; fill:none" points="
   1700.96,267.472 1844.96,267.472 
   "/>
-<g clip-path="url(#clip8900)">
+<g clip-path="url(#clip4800)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:start;" transform="rotate(0, 1868.96, 284.972)" x="1868.96" y="284.972">Stochastic Policy</text>
 </g>
 </svg>
-<p>and save the logged results to the experiment&#39;s JLSO</p><pre><code class="language-julia">for (k, v) in get(lg)
+<p>and save the logged results to the Experiment</p><pre><code class="language-julia">for (k, v) in get(lg)
     exper[k] = v
 end
-finish!(exper);</code></pre><pre><code class="language-none">[ Info: Experiment saved to /tmp/hopper_example.jlso</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../MPPI/">« Running a simple controller</a><a class="docs-footer-nextpage" href="../visualize/">Visualizing Results »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Monday 13 January 2020 03:01">Monday 13 January 2020</span>. Using Julia version 1.3.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+finish!(exper); # flushes everything to disk</code></pre><pre><code class="language-none">[ Info: Experiment saved to /tmp/hopper_example.jlso</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../MPPI/">« Running a simple controller</a><a class="docs-footer-nextpage" href="../visualize/">Visualizing Results »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Monday 13 January 2020 04:22">Monday 13 January 2020</span>. Using Julia version 1.3.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
