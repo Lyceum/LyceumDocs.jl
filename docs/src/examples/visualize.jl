@@ -9,9 +9,9 @@ using FastClosures
 
 
 # The following functions present two modes of visualizing results of NPG or MPPI packaged in
-# LyceumAI. They both work by passing into the 'visualize' function a control function 
+# LyceumAI. They both work by passing into the 'visualize' function a control callback
 # and/or trajectory data to be rendered. These inputs select from available visualization modes
-# TODO list the visualiza3tion modes here.
+# TODO list the visualization modes here.
 # that operate on either data passed in (the trajectory option) or will simulate the forward
 # dynamics of the environment, and call the pass in control function appropriately. This
 # allows for interactive policy evaluation or full model predictive control with MPPI.
@@ -21,15 +21,10 @@ function viz_mppi(mppi::MPPI, env::AbstractMuJoCoEnvironment)
     o = allocate(obsspace(env))
     s = allocate(statespace(env))
 
-    ctrlfn =
-        @closure env -> (getstate!(s, env); getaction!(a, s, o, mppi); setaction!(env, a))
-
-    ## The above line is functionally the same as:
-    ## ctrlfn(env) = begin
-    ##     getstate!(s, env)
-    ##     getaction!(a, s, o, mppi)
-    ##     setaction!(env, a)
-    ## end
+    ## As discussed in the [Julia performance tips](https://docs.julialang.org/en/v1/manual/performance-tips/),
+    ## captured variables (e.g. in a closure) can sometimes hinder performance. To help with that, we use
+    ## the suggested `@closure` macro from FastClosures.jl
+    ctrlfn = @closure env -> (getstate!(s, env); getaction!(a, s, o, mppi); setaction!(env, a))
     visualize(env, controller = ctrlfn)
 end
 
@@ -60,9 +55,9 @@ function viz_policy(
 end
 
 
-# Assuming we have the saved jlso files from the previous examples, we can call the above functions as such:
-
-# TODO the following lines are bullshit; don't run on build, add to md scripts and notebook
+# Assuming we have the saved JLSO files from the previous examples, we can call the above functions as such:
+# TODO We want these lines in the generated script and markdown, but not to be executed during the build process.
+# see https://github.com/Lyceum/LyceumDocs.jl/issues/13
 #md viz_policy("/tmp/hopper_example.jlso", LyceumMuJoCo.HopperV2)
 #md viz_policy("/tmp/opt_humanoid.jlso", Humanoid)
 #md viz_mppi(mppi, LyceumMuJoCo.PointMass())
