@@ -85,7 +85,7 @@ end
 
 m, d = hmMPPI()
 
-md x = JLSO.load("/tmp/opt_humanoid.jlso") # one can load the results as such
+x = JLSO.load("/tmp/opt_humanoid.jlso") # one can load the results as such
 plot!(plot(d.trajectory.rewards, label="Inst. Reward", title="Humanoid Standup"),
       d.trajectory.evaluations, label="Evaluation")
 
