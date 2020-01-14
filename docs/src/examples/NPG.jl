@@ -1,5 +1,6 @@
 #cfg title = "Learning a control policy"
 #cfg weight = 11
+#cfg active = false
 
 #md # ## Policy Gradient Example
 # In this example we walk through the process of setting up an experiment

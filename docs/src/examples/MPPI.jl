@@ -1,5 +1,6 @@
 #cfg title = "Running a simple controller"
 #cfg weight = 10
+#cfg active = false
 
 #md # ## Introduction
 # In this example we walk through the process of setting up an experiment

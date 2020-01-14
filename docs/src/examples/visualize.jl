@@ -1,5 +1,6 @@
 #cfg title = "Visualizing Results"
 #cfg weight = 12
+#cfg active = false
 
 using LyceumBase, LyceumAI, MuJoCo, Shapes, FastClosures
 using LyceumMuJoCo    # We need to bring the Pointmass, Hopper Envs into the workspace

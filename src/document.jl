@@ -36,6 +36,7 @@ const CONFIG_DEFAULTS = Dict(
     :short_title => :use_title,
     :title => nothing,
     :weight => nothing,
+    :deps => []
 )
 
 
