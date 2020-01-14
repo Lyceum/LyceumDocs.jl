@@ -1,19 +1,31 @@
-using LinearAlgebra, Random, Statistics, UnicodePlots, JLSO
-using LyceumBase, LyceumAI, LyceumMuJoCo, MuJoCo, UniversalLogger, Shapes
-using LyceumBase.Tools
-using Shapes: AbstractVectorShape
-import LyceumBase: tconstruct
-using Plots
+using LinearAlgebra, Random, Statistics
+using Plots, UnicodePlots, JLSO
+using LyceumBase, LyceumBase.Tools, LyceumAI, LyceumMuJoCo, MuJoCo, UniversalLogger, Shapes
 
-struct Humanoid{S} <: AbstractMuJoCoEnvironment
+struct Humanoid{S <: MJSim} <: AbstractMuJoCoEnvironment
     sim::S
+end
+
+LyceumMuJoCo.getsim(env::Humanoid) = env.sim #src (needs to be here for below example to work)
+
+modelpath = joinpath(@__DIR__, "humanoid.xml")
+envs = [Humanoid(MJSim(modelpath, skip = 2)) for i=1:Threads.nthreads()]
+Threads.@threads for i=1:Threads.nthreads()
+    thread_env = envs[Threads.threadid()]
+    step!(thread_env)
 end
 
 Humanoid() = first(tconstruct(Humanoid, 1))
 function LyceumMuJoCo.tconstruct(::Type{Humanoid}, n::Integer)
     modelpath = joinpath(@__DIR__, "humanoid.xml")
-    Tuple(Humanoid(s) for s in tconstruct(MJSim, n, modelpath, skip = 2))
-end;
+    return Tuple(Humanoid(s) for s in tconstruct(MJSim, n, modelpath, skip = 2))
+end
+
+envs = tconstruct(Humanoid, Threads.nthreads())
+Threads.@threads for i=1:Threads.nthreads()
+    thread_env = envs[Threads.threadid()]
+    step!(thread_env)
+end
 
 _getheight(shapedstate::ShapedView, ::Humanoid) = shapedstate.qpos[3]
 const LAYING_QPOS = [
@@ -53,18 +65,16 @@ function LyceumMuJoCo.reset!(env::Humanoid)
     reset!(env.sim)
     env.sim.d.qpos .= LAYING_QPOS
     forward!(env.sim)
-    env
+    return env
 end
 
 function LyceumMuJoCo.getreward(state, action, obs, env::Humanoid)
     height = _getheight(statespace(env)(state), env)
     target = 1.25
-
     reward = 1.0
     if height < target
         reward -= 2.0 * abs(target - height)
     end
-
     reward -= 1e-3 * norm(action)^2
 
     return reward
@@ -74,13 +84,13 @@ function LyceumMuJoCo.geteval(state, action, obs, env::Humanoid)
     return _getheight(statespace(env)(state), env)
 end
 
-function hmMPPI(etype = Humanoid; T = 200, H = 64, K = 64)
+function humanoid_MPPI(etype = Humanoid; T = 200, H = 64, K = 64)
     env = etype()
 
-    # The following parameters work well for this get-up tasks, and make work for
-    # other similar tasks, but are not invariant to the model.
+    # The following parameters work well for this get-up task, and may work for
+    # similar tasks, but are not invariant to the model.
     mppi = MPPI(
-        env_tconstructor = i -> tconstruct(etype, i),
+        env_tconstructor = n -> tconstruct(etype, n),
         covar0 = Diagonal(0.05^2 * I, size(actionspace(env), 1)),
         lambda = 0.4,
         H = H,
@@ -89,13 +99,19 @@ function hmMPPI(etype = Humanoid; T = 200, H = 64, K = 64)
     )
 
     iter = ControllerIterator(mppi, env; T = T, plotiter = div(T, 10))
+
     # We can time the following loop; if it ends up less than the time the
     # MuJoCo models integrated forward in, then one could conceivably run this
     # MPPI MPC controller interactively...
-    @time for (t, traj) in iter
-
+    elapsed = @elapsed for (t, traj) in iter
+        # If desired, one can inspect `traj`, `env`, or `mppi` at each timestep.
     end
 
+    if elapsed < time(env)
+        @info "We ran in real time!"
+    end
+
+    # Save our experiment results to a file for later review.
     savepath = "/tmp/opt_humanoid.jlso"
     exper = Experiment(savepath, overwrite = true)
     exper[:etype] = etype
@@ -105,16 +121,23 @@ function hmMPPI(etype = Humanoid; T = 200, H = 64, K = 64)
     end
     finish!(exper)
 
-    return mppi, iter
+    return mppi, env, iter.trajectory
 end
 
-m, d = hmMPPI()
-
-x = JLSO.load("/tmp/opt_humanoid.jlso")
+mppi, env, traj = humanoid_MPPI();
 plot!(
-    plot(d.trajectory.rewards, label = "Inst. Reward", title = "Humanoid Standup"),
-    d.trajectory.evaluations,
+    plot(traj.rewards, label = "Inst. Reward", title = "Humanoid Standup"),
+    traj.evaluations,
     label = "Evaluation",
+    legend = :bottomright
+)
+
+data = JLSO.load("/tmp/opt_humanoid.jlso")
+plot!(
+    plot(data["rewards"], label = "Inst. Reward", title = "Humanoid Standup"),
+    data["evaluations"],
+    label = "Evaluation",
+    legend = :bottomright
 )
 
 # This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jl

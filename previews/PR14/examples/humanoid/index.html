@@ -1,17 +1,24 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Creating a MuJoCo Environment · Lyceum</title><link rel="canonical" href="https://docs.lyceum.ml/dev/examples/humanoid/index.html"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">Lyceum</span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../MPPI/">Running a simple controller</a></li><li><a class="tocitem" href="../NPG/">Learning a control policy</a></li><li><a class="tocitem" href="../visualize/">Visualizing Results</a></li><li class="is-active"><a class="tocitem" href>Creating a MuJoCo Environment</a><ul class="internal"><li><a class="tocitem" href="#Humanoid-Type-1"><span>Humanoid Type</span></a></li><li><a class="tocitem" href="#Customizing-1"><span>Customizing</span></a></li><li><a class="tocitem" href="#Lyceum-API-Simple-Setup-1"><span>Lyceum API Simple Setup</span></a></li><li><a class="tocitem" href="#Running-Experiments-1"><span>Running Experiments</span></a></li><li><a class="tocitem" href="#Checking-Results-1"><span>Checking Results</span></a></li></ul></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Creating a MuJoCo Environment</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Creating a MuJoCo Environment</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/Lyceum/LyceumDocs.jl/blob/master/docs/src/examples/humanoid.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><div class="admonition is-info"><header class="admonition-header">Running examples locally</header><div class="admonition-body"><p>This example and more are also available as Julia scripts and Jupyter notebooks.</p><p>See <a href="https://github.com/Lyceum/LyceumDocs.jl/blob/master/example_howto.md">the how-to page</a> for more information.</p></div></div><h1 id="Creating-a-MuJoCo-Environment-1"><a class="docs-heading-anchor" href="#Creating-a-MuJoCo-Environment-1">Creating a MuJoCo Environment</a><a class="docs-heading-anchor-permalink" href="#Creating-a-MuJoCo-Environment-1" title="Permalink"></a></h1><p>Using Mujoco, we can create an environment that mostly relies on the defaults of LyceumBase and LyceumMuJoCo to propagate state, action, and observation data. We will have to include a reward and evaluation function, of course, and also show how the functions can be customized for different tasks.</p><p>First we grab our dependencies of the Lyceum ecosystem and other helpful packages</p><pre><code class="language-">using LinearAlgebra, Random, Statistics, UnicodePlots, JLSO
-using LyceumBase, LyceumAI, LyceumMuJoCo, MuJoCo, UniversalLogger, Shapes
-using LyceumBase.Tools
-using Shapes: AbstractVectorShape
-import LyceumBase: tconstruct
-using Plots</code></pre><h2 id="Humanoid-Type-1"><a class="docs-heading-anchor" href="#Humanoid-Type-1">Humanoid Type</a><a class="docs-heading-anchor-permalink" href="#Humanoid-Type-1" title="Permalink"></a></h2><p>This struct is our primary entry into the environment API. As you can see, this simple example only wraps around the underlying simulator. The functions of the LyceumBase API will dispatch on this struct. When an algorithm calls a function such as <code>getobs!</code>, Julia will select from all functions with that name depending on the <em>type</em> of environment that is passed in.</p><pre><code class="language-">struct Humanoid{S} &lt;: AbstractMuJoCoEnvironment
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Creating a MuJoCo Environment · Lyceum</title><link rel="canonical" href="https://docs.lyceum.ml/dev/examples/humanoid/index.html"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">Lyceum</span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Examples</span><ul><li class="is-active"><a class="tocitem" href>Creating a MuJoCo Environment</a><ul class="internal"><li><a class="tocitem" href="#Overview-1"><span>Overview</span></a></li><li><a class="tocitem" href="#The-Code-1"><span>The Code</span></a></li></ul></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Creating a MuJoCo Environment</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Creating a MuJoCo Environment</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/Lyceum/LyceumDocs.jl/blob/master/docs/src/examples/humanoid.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><div class="admonition is-info"><header class="admonition-header">Running examples locally</header><div class="admonition-body"><p>This example and more are also available as Julia scripts and Jupyter notebooks.</p><p>See <a href="https://github.com/Lyceum/LyceumDocs.jl/blob/master/example_howto.md">the how-to page</a> for more information.</p></div></div><h1 id="Creating-a-MuJoCo-Environment-1"><a class="docs-heading-anchor" href="#Creating-a-MuJoCo-Environment-1">Creating a MuJoCo Environment</a><a class="docs-heading-anchor-permalink" href="#Creating-a-MuJoCo-Environment-1" title="Permalink"></a></h1><h2 id="Overview-1"><a class="docs-heading-anchor" href="#Overview-1">Overview</a><a class="docs-heading-anchor-permalink" href="#Overview-1" title="Permalink"></a></h2><p>Using LyceumMuJoCo, we will create the environment for a Humanoid &quot;get-up&quot; task that mostly relies on the defaults of LyceumBase and LyceumMuJoCo to propagate state, action, and observation data. We will have to implement reward and evaluation functions, of course, along with a few other parts of the <code>AbstractEnvironment</code> interface.</p><p>We then solve the &quot;get-up&quot; task using a Model-Predictive Control method called <a href="https://ieeexplore.ieee.org/iel7/7478842/7487087/07487277.pdf">&quot;Model Predictive Path Integral Control&quot;</a> or MPPI, walking through how to log experiment data and plot the results.</p><h2 id="The-Code-1"><a class="docs-heading-anchor" href="#The-Code-1">The Code</a><a class="docs-heading-anchor-permalink" href="#The-Code-1" title="Permalink"></a></h2><p>First we grab our dependencies of the Lyceum ecosystem and other helpful packages.</p><pre><code class="language-julia">using LinearAlgebra, Random, Statistics
+using Plots, UnicodePlots, JLSO
+using LyceumBase, LyceumBase.Tools, LyceumAI, LyceumMuJoCo, MuJoCo, UniversalLogger, Shapes</code></pre><h3 id="Humanoid-Type-1"><a class="docs-heading-anchor" href="#Humanoid-Type-1">Humanoid Type</a><a class="docs-heading-anchor-permalink" href="#Humanoid-Type-1" title="Permalink"></a></h3><p>This struct is our primary entry into the environment API. Environments utilizing the MuJoCo simulator through LyceumMuJoCo should subtype <code>AbstractMuJoCoEnvironment &lt;: AbstractEnvironment</code>. As you can see, this simple example only wraps around the underlying simulator (the <code>sim::MJSim</code> field of <code>Humanoid</code>, referred to hereafter as just <code>sim</code>). The functions of the LyceumBase API will then dispatch on this struct through Julia&#39;s <a href="https://en.wikipedia.org/wiki/Multiple_dispatch">multiple dispatch</a> mechanism. When an algorithm calls a function such as <code>getobs!(obs, env)</code>, Julia will select from all functions with that name depending on <code>typeof(obs)</code> and <code>typeof(env)</code>.</p><pre><code class="language-julia">struct Humanoid{S &lt;: MJSim} &lt;: AbstractMuJoCoEnvironment
     sim::S
-end</code></pre><p><code>Humanoid</code> (and all subtypes of <code>AbstractEnvironment</code>) are designed to be used in a single threaded context. To use <code>Humanoid</code>, one would simply create <code>Threads.nthreads()</code> instances of <code>Humanoid</code>. As <code>Humanoid</code> only ever uses <code>jlModel</code> in a read-only fashion, we can make a performance optimization by sharing a single instance of <code>jlModel</code> across each thread, resulting in improved cache efficiency. <code>LyceumMuJoCo.tconstruct</code> helps us to do just that by providing a common interface for defining &quot;thread-aware&quot; constructors. Below, we make a call to <code>tconstruct(MJSim, n, modelpath, skip = 2)</code> which will construct <code>n</code> instances of <code>MJSim</code> constructed from <code>modelpath</code> and with a <code>skip</code> of 2, all sharing the exact same <code>jlModel</code> instance.</p><pre><code class="language-">Humanoid() = first(tconstruct(Humanoid, 1))
+end
+
+LyceumMuJoCo.getsim(env::Humanoid) = env.sim #src (needs to be here for below example to work)</code></pre><p><code>Humanoid</code> (and all subtypes of <code>AbstractEnvironment</code>) are designed to be used in a single threaded context. To use <code>Humanoid</code> in a multi-threaded context, one could simply create <code>Threads.nthreads()</code> instances of <code>Humanoid</code>:</p><pre><code class="language-julia">modelpath = joinpath(@__DIR__, &quot;humanoid.xml&quot;)
+envs = [Humanoid(MJSim(modelpath, skip = 2)) for i=1:Threads.nthreads()]
+Threads.@threads for i=1:Threads.nthreads()
+    thread_env = envs[Threads.threadid()]
+    step!(thread_env)
+end</code></pre><p>As <code>Humanoid</code> only ever uses its internal <code>jlModel</code> (found at <code>sim.m</code>) in a read-only fashion, we can make a performance optimization by sharing a single instance of <code>jlModel</code> across each thread, resulting in improved cache efficiency. <code>LyceumMuJoCo.tconstruct</code>, short for &quot;thread construct&quot;, helps us to do just that by providing a common interface for defining &quot;thread-aware&quot; constructors. Below, we make a call to <code>tconstruct(MJSim, n, modelpath, skip = 2)</code> which will construct <code>n</code> instances of <code>MJSim</code> constructed from <code>modelpath</code> and with a <code>skip</code> of 2, all sharing the exact same <code>jlModel</code> instance, and return <code>n</code> instances of <code>Humanoid</code>. All of the environments provided by LyceumMuJoCo feature similar definitions of <code>tconstruct</code> as found below.</p><pre><code class="language-julia">Humanoid() = first(tconstruct(Humanoid, 1))
 function LyceumMuJoCo.tconstruct(::Type{Humanoid}, n::Integer)
     modelpath = joinpath(@__DIR__, &quot;humanoid.xml&quot;)
-    Tuple(Humanoid(s) for s in tconstruct(MJSim, n, modelpath, skip = 2))
-end;
-nothing #hide</code></pre><h2 id="Customizing-1"><a class="docs-heading-anchor" href="#Customizing-1">Customizing</a><a class="docs-heading-anchor-permalink" href="#Customizing-1" title="Permalink"></a></h2><p>The following are helpers for the tasks we&#39;d like to consider. We want the humanoid to stand up, thus we need to grab the model&#39;s height, as well as record a laying down position that we can use to set the state to. By exploring the model in the REPL or xml we can see that qpos[3] is the index for the z-axis (height) of the root joint. The <code>LAYING_QPOS</code> data was collected externally by posing the model into a supine pose; one can either use LyceumMuJoCoViz.jl or <code>simulate.cpp</code> included with a MuJoCo release to do this.</p><pre><code class="language-">_getheight(shapedstate::ShapedView, ::Humanoid) = shapedstate.qpos[3]
+    return Tuple(Humanoid(s) for s in tconstruct(MJSim, n, modelpath, skip = 2))
+end</code></pre><p>We can then use <code>tconstruct</code> as follows:</p><pre><code class="language-julia">envs = tconstruct(Humanoid, Threads.nthreads())
+Threads.@threads for i=1:Threads.nthreads()
+    thread_env = envs[Threads.threadid()]
+    step!(thread_env)
+end</code></pre><h3 id="Utilities-1"><a class="docs-heading-anchor" href="#Utilities-1">Utilities</a><a class="docs-heading-anchor-permalink" href="#Utilities-1" title="Permalink"></a></h3><p>The following are helpers for the &quot;get-up&quot; task we&#39;d like to consider. We want the humanoid to stand up, thus we need to grab the model&#39;s height, as well as record a laying down position that we can use to set the state to. By exploring the model in the REPL or MJCF/XML file we can see that <code>sim.d.qpos[3]</code> is the index for the z-axis (height) of the root joint. The <code>LAYING_QPOS</code> data was collected externally by posing the model into a supine pose; one can either use LyceumMuJoCoViz or simulate.cpp included with a MuJoCo release to do this.</p><pre><code class="language-julia">_getheight(shapedstate::ShapedView, ::Humanoid) = shapedstate.qpos[3]
 const LAYING_QPOS = [
     -0.164158,
     0.0265899,
@@ -41,33 +48,30 @@ const LAYING_QPOS = [
     -0.0914509,
     0.708539,
     -1.57187,
-];
-nothing #hide</code></pre><h2 id="Lyceum-API-Simple-Setup-1"><a class="docs-heading-anchor" href="#Lyceum-API-Simple-Setup-1">Lyceum API Simple Setup</a><a class="docs-heading-anchor-permalink" href="#Lyceum-API-Simple-Setup-1" title="Permalink"></a></h2><p>LyceumMuJoCo requires access to the underlying <code>MJSim</code> simulator, thus any LyceumMuJoCo environments need to point to the correct field in the env struct that is the simulator; in our case there&#39;s only one field.</p><pre><code class="language-">LyceumMuJoCo.getsim(env::Humanoid) = env.sim</code></pre><p>Normally we could rely on MuJoCo to reset the model to the default configuration when the model XML is loaded; in humanoid.xml&#39;s case, it is in a vertical position. To reset the model to our laying down or supine pose, we can copy in the data from the const array above to <code>d.qpos</code>. Calling <code>forward!</code> here is the same as <code>mj_forward(m,d)</code>, for a pure MuJoCo reference.</p><pre><code class="language-">function LyceumMuJoCo.reset!(env::Humanoid)
+];</code></pre><h3 id="The-AbstractMuJoCoEnvironment-and-AbstractEnvironment-APIs-1"><a class="docs-heading-anchor" href="#The-AbstractMuJoCoEnvironment-and-AbstractEnvironment-APIs-1">The <code>AbstractMuJoCoEnvironment</code> and <code>AbstractEnvironment</code> APIs</a><a class="docs-heading-anchor-permalink" href="#The-AbstractMuJoCoEnvironment-and-AbstractEnvironment-APIs-1" title="Permalink"></a></h3><p>LyceumMuJoCo requires access to the underlying <code>MJSim</code> simulator, thus any LyceumMuJoCo environments need to point to the correct field in the environment struct that is the simulator; in our case there&#39;s only one field: <code>sim</code>.</p><pre><code class="language-julia">LyceumMuJoCo.getsim(env::Humanoid) = env.sim</code></pre><p>Normally we could rely on MuJoCo to reset the model to the default configuration when the model XML is loaded; the humanoid.xml model, however, defaults to a vertical pose. To reset the model to our laying down or supine pose, we can copy in the data from <code>LAYING_QPOS</code> above to <code>d.qpos</code>. Calling <code>forward!</code> here is the same as <code>mj_forward(env.sim.m, env.sim.d)</code>, for a pure MuJoCo reference.</p><pre><code class="language-julia">function LyceumMuJoCo.reset!(env::Humanoid)
     reset!(env.sim)
     env.sim.d.qpos .= LAYING_QPOS
     forward!(env.sim)
-    env
-end</code></pre><p>This reward function uses the <code>_getheight</code> helper function above to get the model&#39;s height when the function is called. We also specify a target height of 1.25, and penalize the agent for deviating from the target height. There is also a small penalty for using large control activations; if the coefficient is made larger, the agent may not move at all!</p><pre><code class="language-">function LyceumMuJoCo.getreward(state, action, obs, env::Humanoid)
+    return env
+end</code></pre><p>This reward function uses the <code>_getheight</code> helper function above to get the model&#39;s height when the function is called. We also specify a target height of 1.25 and penalize the agent for deviating from the target height. There is also a small penalty for using large control activations; if the coefficient is made larger, the agent may not move at all!</p><pre><code class="language-julia">function LyceumMuJoCo.getreward(state, action, obs, env::Humanoid)
     height = _getheight(statespace(env)(state), env)
     target = 1.25
-
     reward = 1.0
     if height &lt; target
         reward -= 2.0 * abs(target - height)
     end
-
     reward -= 1e-3 * norm(action)^2
 
     return reward
-end</code></pre><p>Finally, we can specify an evaluation function. The difference between the eval and reward functions are that we can track a useful value, such as height with <code>geteval</code>, but an algorithm like MPPI or NPG may need a shaped function to guide any optimization. Plotting this eval function will show the agent&#39;s height over time: this is very useful for reviewing actual desired behavior, regardless of the reward achieved, as it can be used to diagnose reward specification problems.</p><pre><code class="language-">function LyceumMuJoCo.geteval(state, action, obs, env::Humanoid)
+end</code></pre><p>Finally, we can specify an evaluation function. The difference between <code>geteval</code> and <code>getreward</code> is that <code>getreward</code> is the shaped reward our algorithm is optimizing for, while <code>geteval</code> lets us track a useful value for monitoring performance, such as height. Plotting this eval function will show the agent&#39;s height over time and is very useful for reviewing actual desired behavior, regardless of the reward achieved, as it can be used to diagnose reward specification problems.</p><pre><code class="language-julia">function LyceumMuJoCo.geteval(state, action, obs, env::Humanoid)
     return _getheight(statespace(env)(state), env)
-end</code></pre><h2 id="Running-Experiments-1"><a class="docs-heading-anchor" href="#Running-Experiments-1">Running Experiments</a><a class="docs-heading-anchor-permalink" href="#Running-Experiments-1" title="Permalink"></a></h2><p>As discussed in the <a href="https://docs.julialang.org/en/v1/manual/performance-tips/">Julia performance tips</a>, globals can hinder performance. To avoid this, we construct the <code>MPPI</code> and <code>ControllerIterator</code> instances within a function. This also lets us easily run our experiment with different choices of parameters (e.g. <code>H</code>). Like most algorithms in <code>LyceumAI</code>, <code>MPPI</code> accepts a <code>thread-aware</code> environment constructor as well as any algorithm parameters. <code>MPPI</code> itself is not iterable, so we wrap it in <code>ControllerIterator</code> which simple calls <code>getaction!(action, state, obs, mppi::MPPI)</code> for <code>T</code> timesteps, while simultaneously plotting and logging the trajectory rollout.</p><pre><code class="language-">function hmMPPI(etype = Humanoid; T = 200, H = 64, K = 64)
+end</code></pre><h3 id="Running-Experiments-1"><a class="docs-heading-anchor" href="#Running-Experiments-1">Running Experiments</a><a class="docs-heading-anchor-permalink" href="#Running-Experiments-1" title="Permalink"></a></h3><p>As discussed in the <a href="https://docs.julialang.org/en/v1/manual/performance-tips/">Julia performance tips</a>, globals can hinder performance. To avoid this, we construct the <code>MPPI</code> and <code>ControllerIterator</code> instances within a function. This also lets us easily run our experiment with different choices of parameters (e.g. <code>H</code>). Like most algorithms in <code>LyceumAI</code>, <code>MPPI</code> accepts a &quot;thread-aware&quot; environment constructor as well as any algorithm parameters. In this case, we just pass a closure around the <code>tconstruct</code> function we defined above. <code>MPPI</code>, being a single-step algorithm, is itself not iterable, so we wrap it in a <code>ControllerIterator</code> which simply calls <code>getaction!(action, state, obs, mppi::MPPI)</code> for <code>T</code> timesteps, while simultaneously plotting and logging the trajectory rollout.</p><pre><code class="language-julia">function humanoid_MPPI(etype = Humanoid; T = 200, H = 64, K = 64)
     env = etype()
 
-    # The following parameters work well for this get-up tasks, and make work for
-    # other similar tasks, but are not invariant to the model.
+    # The following parameters work well for this get-up task, and may work for
+    # similar tasks, but are not invariant to the model.
     mppi = MPPI(
-        env_tconstructor = i -&gt; tconstruct(etype, i),
+        env_tconstructor = n -&gt; tconstruct(etype, n),
         covar0 = Diagonal(0.05^2 * I, size(actionspace(env), 1)),
         lambda = 0.4,
         H = H,
@@ -76,10 +80,20 @@ end</code></pre><h2 id="Running-Experiments-1"><a class="docs-heading-anchor" hr
     )
 
     iter = ControllerIterator(mppi, env; T = T, plotiter = div(T, 10))
+
     # We can time the following loop; if it ends up less than the time the
     # MuJoCo models integrated forward in, then one could conceivably run this
     # MPPI MPC controller interactively...
-    @time for (t, traj) in iter</code></pre><p>If desired, one can inspect <code>traj</code>, <code>env</code>, or <code>mppi</code> at each timestep.</p><pre><code class="language-julia">    end</code></pre><p>Save our experiment results to a file for later review.</p><pre><code class="language-">    savepath = &quot;/tmp/opt_humanoid.jlso&quot;
+    elapsed = @elapsed for (t, traj) in iter
+        # If desired, one can inspect `traj`, `env`, or `mppi` at each timestep.
+    end
+
+    if elapsed &lt; time(env)
+        @info &quot;We ran in real time!&quot;
+    end
+
+    # Save our experiment results to a file for later review.
+    savepath = &quot;/tmp/opt_humanoid.jlso&quot;
     exper = Experiment(savepath, overwrite = true)
     exper[:etype] = etype
 
@@ -88,12 +102,373 @@ end</code></pre><h2 id="Running-Experiments-1"><a class="docs-heading-anchor" hr
     end
     finish!(exper)
 
-    return mppi, iter
-end
-
-m, d = hmMPPI()</code></pre><h2 id="Checking-Results-1"><a class="docs-heading-anchor" href="#Checking-Results-1">Checking Results</a><a class="docs-heading-anchor-permalink" href="#Checking-Results-1" title="Permalink"></a></h2><p>The MPPI algorithm, and any that you develop, can and should use plotting tools to track progress as they go. If one wanted to review the results after training, or prepare plots for presentations, one can load the data from disk instead.</p><pre><code class="language-">x = JLSO.load(&quot;/tmp/opt_humanoid.jlso&quot;)
+    return mppi, env, iter.trajectory
+end</code></pre><pre><code class="language-none">humanoid_MPPI (generic function with 2 methods)</code></pre><h3 id="Checking-Results-1"><a class="docs-heading-anchor" href="#Checking-Results-1">Checking Results</a><a class="docs-heading-anchor-permalink" href="#Checking-Results-1" title="Permalink"></a></h3><p>The MPPI algorithm, and any that you develop, can and should use plotting tools to track progress as they go.</p><pre><code class="language-julia">mppi, env, traj = humanoid_MPPI();
 plot!(
-    plot(d.trajectory.rewards, label = &quot;Inst. Reward&quot;, title = &quot;Humanoid Standup&quot;),
-    d.trajectory.evaluations,
+    plot(traj.rewards, label = &quot;Inst. Reward&quot;, title = &quot;Humanoid Standup&quot;),
+    traj.evaluations,
     label = &quot;Evaluation&quot;,
-)</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../visualize/">« Visualizing Results</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Monday 13 January 2020 20:04">Monday 13 January 2020</span>. Using Julia version 1.3.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+    legend = :bottomright
+)</code></pre><?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="600" height="400" viewBox="0 0 2400 1600">
+<defs>
+  <clipPath id="clip6600">
+    <rect x="0" y="0" width="2400" height="1600"/>
+  </clipPath>
+</defs>
+<path clip-path="url(#clip6600)" d="
+M0 1600 L2400 1600 L2400 0 L0 0  Z
+  " fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<defs>
+  <clipPath id="clip6601">
+    <rect x="480" y="0" width="1681" height="1600"/>
+  </clipPath>
+</defs>
+<path clip-path="url(#clip6600)" d="
+M86.9921 1521.01 L2352.76 1521.01 L2352.76 62.9921 L86.9921 62.9921  Z
+  " fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<defs>
+  <clipPath id="clip6602">
+    <rect x="86" y="62" width="2267" height="1459"/>
+  </clipPath>
+</defs>
+<polyline clip-path="url(#clip6602)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  140.376,1521.01 140.376,62.9921 
+  "/>
+<polyline clip-path="url(#clip6602)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  677.44,1521.01 677.44,62.9921 
+  "/>
+<polyline clip-path="url(#clip6602)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  1214.5,1521.01 1214.5,62.9921 
+  "/>
+<polyline clip-path="url(#clip6602)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  1751.57,1521.01 1751.57,62.9921 
+  "/>
+<polyline clip-path="url(#clip6602)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  2288.63,1521.01 2288.63,62.9921 
+  "/>
+<polyline clip-path="url(#clip6602)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  86.9921,1283.27 2352.76,1283.27 
+  "/>
+<polyline clip-path="url(#clip6602)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  86.9921,956.715 2352.76,956.715 
+  "/>
+<polyline clip-path="url(#clip6602)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  86.9921,630.163 2352.76,630.163 
+  "/>
+<polyline clip-path="url(#clip6602)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  86.9921,303.61 2352.76,303.61 
+  "/>
+<polyline clip-path="url(#clip6600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  86.9921,1521.01 2352.76,1521.01 
+  "/>
+<polyline clip-path="url(#clip6600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  86.9921,1521.01 86.9921,62.9921 
+  "/>
+<polyline clip-path="url(#clip6600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  140.376,1521.01 140.376,1503.51 
+  "/>
+<polyline clip-path="url(#clip6600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  677.44,1521.01 677.44,1503.51 
+  "/>
+<polyline clip-path="url(#clip6600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  1214.5,1521.01 1214.5,1503.51 
+  "/>
+<polyline clip-path="url(#clip6600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  1751.57,1521.01 1751.57,1503.51 
+  "/>
+<polyline clip-path="url(#clip6600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  2288.63,1521.01 2288.63,1503.51 
+  "/>
+<polyline clip-path="url(#clip6600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  86.9921,1283.27 114.181,1283.27 
+  "/>
+<polyline clip-path="url(#clip6600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  86.9921,956.715 114.181,956.715 
+  "/>
+<polyline clip-path="url(#clip6600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  86.9921,630.163 114.181,630.163 
+  "/>
+<polyline clip-path="url(#clip6600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  86.9921,303.61 114.181,303.61 
+  "/>
+<g clip-path="url(#clip6600)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 140.376, 1575.01)" x="140.376" y="1575.01">0</text>
+</g>
+<g clip-path="url(#clip6600)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 677.44, 1575.01)" x="677.44" y="1575.01">50</text>
+</g>
+<g clip-path="url(#clip6600)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 1214.5, 1575.01)" x="1214.5" y="1575.01">100</text>
+</g>
+<g clip-path="url(#clip6600)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 1751.57, 1575.01)" x="1751.57" y="1575.01">150</text>
+</g>
+<g clip-path="url(#clip6600)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 2288.63, 1575.01)" x="2288.63" y="1575.01">200</text>
+</g>
+<g clip-path="url(#clip6600)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 1300.77)" x="62.9921" y="1300.77">-1.0</text>
+</g>
+<g clip-path="url(#clip6600)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 974.215)" x="62.9921" y="974.215">-0.5</text>
+</g>
+<g clip-path="url(#clip6600)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 647.663)" x="62.9921" y="647.663">0.0</text>
+</g>
+<g clip-path="url(#clip6600)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 321.11)" x="62.9921" y="321.11">0.5</text>
+</g>
+<g clip-path="url(#clip6600)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:84px; text-anchor:middle;" transform="rotate(0, 1219.87, 73.2)" x="1219.87" y="73.2">Humanoid Standup</text>
+</g>
+<polyline clip-path="url(#clip6602)" style="stroke:#009af9; stroke-width:4; stroke-opacity:1; fill:none" points="
+  151.118,1477.74 161.859,1478.84 172.6,1479.74 183.341,1479.43 194.083,1478.83 204.824,1477.21 215.565,1477.38 226.306,1475.7 237.048,1472.68 247.789,1467.12 
+  258.53,1462.44 269.272,1459.84 280.013,1450.43 290.754,1437.5 301.495,1423.81 312.237,1409.33 322.978,1395.43 333.719,1380.54 344.46,1361.59 355.202,1338.01 
+  365.943,1311.61 376.684,1283.1 387.425,1254.19 398.167,1223.16 408.908,1191.81 419.649,1161.99 430.391,1134.43 441.132,1108.61 451.873,1084.58 462.614,1065 
+  473.356,1047.76 484.097,1029.81 494.838,1009.53 505.579,990.275 516.321,972.505 527.062,955.543 537.803,939.304 548.545,923.83 559.286,912.618 570.027,905.699 
+  580.768,900.934 591.51,897.751 602.251,895.456 612.992,894.004 623.733,891.637 634.475,887.608 645.216,884.6 655.957,884.896 666.699,888.836 677.44,894.987 
+  688.181,900.833 698.922,899.991 709.664,897.149 720.405,890.779 731.146,879.969 741.887,865.834 752.629,848.189 763.37,829.255 774.111,811.314 784.853,792.025 
+  795.594,771.259 806.335,750.54 817.076,730.761 827.818,713.115 838.559,697.995 849.3,684.12 860.041,669.042 870.783,653.183 881.524,638.701 892.265,624.232 
+  903.007,612.176 913.748,601.06 924.489,589.348 935.23,579.928 945.972,573.198 956.713,567.499 967.454,561.483 978.195,558.164 988.937,558.617 999.678,562.622 
+  1010.42,568.269 1021.16,575.58 1031.9,583.405 1042.64,591.626 1053.38,599.15 1064.13,608.783 1074.87,620.436 1085.61,634.717 1096.35,649.574 1107.09,666.544 
+  1117.83,683.681 1128.57,701.261 1139.31,720.705 1150.06,740.166 1160.8,762.044 1171.54,785.528 1182.28,811.284 1193.02,840.248 1203.76,870.893 1214.5,895.039 
+  1225.24,900.69 1235.99,899.014 1246.73,895.836 1257.47,893.042 1268.21,888.283 1278.95,884.5 1289.69,881.833 1300.43,880.981 1311.17,881.764 1321.92,883.893 
+  1332.66,887.656 1343.4,889.769 1354.14,891.16 1364.88,890.621 1375.62,888.327 1386.36,886.057 1397.1,884.975 1407.85,884.125 1418.59,884.919 1429.33,886.941 
+  1440.07,887.04 1450.81,886.762 1461.55,886.498 1472.29,886.042 1483.04,885.482 1493.78,885.047 1504.52,885.044 1515.26,885.186 1526,885.727 1536.74,886.321 
+  1547.48,885.593 1558.22,884.39 1568.97,884.146 1579.71,885.754 1590.45,886.142 1601.19,886.219 1611.93,886.121 1622.67,885.52 1633.41,884.291 1644.15,883.669 
+  1654.9,883.086 1665.64,883.959 1676.38,883.899 1687.12,883.405 1697.86,882.385 1708.6,882.235 1719.34,882.555 1730.08,882.874 1740.83,882.914 1751.57,882.895 
+  1762.31,882.846 1773.05,882.41 1783.79,882.796 1794.53,883.237 1805.27,883.032 1816.01,883.108 1826.76,883.081 1837.5,882.871 1848.24,882.821 1858.98,883.025 
+  1869.72,883.188 1880.46,883.027 1891.2,882.979 1901.94,883.029 1912.69,883.023 1923.43,883.134 1934.17,882.791 1944.91,884.061 1955.65,884.032 1966.39,883.585 
+  1977.13,883.12 1987.87,883.27 1998.62,883.27 2009.36,883.552 2020.1,883.951 2030.84,884.157 2041.58,884.195 2052.32,884.133 2063.06,883.941 2073.81,883.796 
+  2084.55,884.68 2095.29,885.221 2106.03,885.216 2116.77,885.29 2127.51,885.262 2138.25,885.062 2148.99,884.971 2159.74,884.657 2170.48,885.047 2181.22,885.99 
+  2191.96,886.308 2202.7,885.715 2213.44,885.561 2224.18,885.308 2234.92,885.246 2245.67,885.08 2256.41,884.872 2267.15,885.589 2277.89,885.463 2288.63,884.919 
+  
+  "/>
+<polyline clip-path="url(#clip6602)" style="stroke:#e26f46; stroke-width:4; stroke-opacity:1; fill:none" points="
+  151.118,564.123 161.859,564.669 172.6,565.114 183.341,564.953 194.083,564.645 204.824,563.828 215.565,563.906 226.306,563.064 237.048,561.506 247.789,558.751 
+  258.53,556.387 269.272,555.043 280.013,550.368 290.754,543.86 301.495,537.029 312.237,529.744 322.978,522.843 333.719,515.42 344.46,505.942 355.202,494.137 
+  365.943,480.871 376.684,466.706 387.425,452.165 398.167,436.721 408.908,421.021 419.649,406.134 430.391,392.32 441.132,379.391 451.873,367.446 462.614,357.616 
+  473.356,349.002 484.097,340.011 494.838,329.921 505.579,320.291 516.321,311.209 527.062,302.864 537.803,294.826 548.545,287.048 559.286,281.462 570.027,278.002 
+  580.768,275.628 591.51,274.052 602.251,272.893 612.992,272.058 623.733,270.923 634.475,268.953 645.216,267.481 655.957,267.57 666.699,269.422 677.44,272.621 
+  688.181,275.413 698.922,275.117 709.664,273.587 720.405,270.324 731.146,264.972 741.887,257.881 752.629,249.188 763.37,239.727 774.111,230.595 784.853,221.055 
+  795.594,210.641 806.335,200.441 817.076,190.51 827.818,181.626 838.559,174.068 849.3,167.116 860.041,159.553 870.783,151.706 881.524,144.476 892.265,137.271 
+  903.007,131.139 913.748,125.653 924.489,119.818 935.23,115.108 945.972,111.74 956.713,108.904 967.454,105.918 978.195,104.257 988.937,104.481 999.678,106.476 
+  1010.42,109.256 1021.16,112.964 1031.9,116.856 1042.64,120.961 1053.38,124.737 1064.13,129.555 1074.87,135.355 1085.61,142.558 1096.35,149.933 1107.09,158.406 
+  1117.83,166.981 1128.57,175.842 1139.31,185.46 1150.06,195.28 1160.8,206.195 1171.54,217.953 1182.28,230.847 1193.02,245.257 1203.76,260.626 1214.5,272.72 
+  1225.24,275.455 1235.99,274.669 1246.73,273.08 1257.47,271.675 1268.21,269.319 1278.95,267.414 1289.69,266.111 1300.43,265.605 1311.17,266.094 1321.92,267.14 
+  1332.66,269.034 1343.4,270.044 1354.14,270.793 1364.88,270.502 1375.62,269.393 1386.36,268.182 1397.1,267.663 1407.85,267.252 1418.59,267.638 1429.33,268.683 
+  1440.07,268.72 1450.81,268.582 1461.55,268.471 1472.29,268.237 1483.04,267.921 1493.78,267.731 1504.52,267.721 1515.26,267.794 1526,268.06 1536.74,268.372 
+  1547.48,268.005 1558.22,267.413 1568.97,267.284 1579.71,268.098 1590.45,268.278 1601.19,268.314 1611.93,268.266 1622.67,267.981 1633.41,267.364 1644.15,267.025 
+  1654.9,266.725 1665.64,267.174 1676.38,267.16 1687.12,266.927 1697.86,266.41 1708.6,266.319 1719.34,266.494 1730.08,266.654 1740.83,266.683 1751.57,266.659 
+  1762.31,266.63 1773.05,266.431 1783.79,266.605 1794.53,266.812 1805.27,266.742 1816.01,266.772 1826.76,266.751 1837.5,266.652 1848.24,266.638 1858.98,266.741 
+  1869.72,266.817 1880.46,266.73 1891.2,266.713 1901.94,266.708 1912.69,266.747 1923.43,266.778 1934.17,266.622 1944.91,267.248 1955.65,267.23 1966.39,267.017 
+  1977.13,266.772 1987.87,266.851 1998.62,266.851 2009.36,266.96 2020.1,267.2 2030.84,267.308 2041.58,267.321 2052.32,267.284 2063.06,267.163 2073.81,267.126 
+  2084.55,267.555 2095.29,267.813 2106.03,267.838 2116.77,267.858 2127.51,267.831 2138.25,267.75 2148.99,267.692 2159.74,267.563 2170.48,267.749 2181.22,268.203 
+  2191.96,268.368 2202.7,268.083 2213.44,267.989 2224.18,267.88 2234.92,267.836 2245.67,267.748 2256.41,267.654 2267.15,268.008 2277.89,267.954 2288.63,267.678 
+  
+  "/>
+<path clip-path="url(#clip6600)" d="
+M1770.58 1377.01 L2280.76 1377.01 L2280.76 1195.57 L1770.58 1195.57  Z
+  " fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<polyline clip-path="url(#clip6600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  1770.58,1377.01 2280.76,1377.01 2280.76,1195.57 1770.58,1195.57 1770.58,1377.01 
+  "/>
+<polyline clip-path="url(#clip6600)" style="stroke:#009af9; stroke-width:4; stroke-opacity:1; fill:none" points="
+  1794.58,1256.05 1938.58,1256.05 
+  "/>
+<g clip-path="url(#clip6600)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:start;" transform="rotate(0, 1962.58, 1273.55)" x="1962.58" y="1273.55">Inst. Reward</text>
+</g>
+<polyline clip-path="url(#clip6600)" style="stroke:#e26f46; stroke-width:4; stroke-opacity:1; fill:none" points="
+  1794.58,1316.53 1938.58,1316.53 
+  "/>
+<g clip-path="url(#clip6600)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:start;" transform="rotate(0, 1962.58, 1334.03)" x="1962.58" y="1334.03">Evaluation</text>
+</g>
+</svg>
+<p>If one wanted to review the results after training, or prepare plots for presentations, one can load the data from disk instead.</p><pre><code class="language-julia">data = JLSO.load(&quot;/tmp/opt_humanoid.jlso&quot;)
+plot!(
+    plot(data[&quot;rewards&quot;], label = &quot;Inst. Reward&quot;, title = &quot;Humanoid Standup&quot;),
+    data[&quot;evaluations&quot;],
+    label = &quot;Evaluation&quot;,
+    legend = :bottomright
+)</code></pre><?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="600" height="400" viewBox="0 0 2400 1600">
+<defs>
+  <clipPath id="clip7200">
+    <rect x="0" y="0" width="2400" height="1600"/>
+  </clipPath>
+</defs>
+<path clip-path="url(#clip7200)" d="
+M0 1600 L2400 1600 L2400 0 L0 0  Z
+  " fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<defs>
+  <clipPath id="clip7201">
+    <rect x="480" y="0" width="1681" height="1600"/>
+  </clipPath>
+</defs>
+<path clip-path="url(#clip7200)" d="
+M86.9921 1521.01 L2352.76 1521.01 L2352.76 62.9921 L86.9921 62.9921  Z
+  " fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<defs>
+  <clipPath id="clip7202">
+    <rect x="86" y="62" width="2267" height="1459"/>
+  </clipPath>
+</defs>
+<polyline clip-path="url(#clip7202)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  140.376,1521.01 140.376,62.9921 
+  "/>
+<polyline clip-path="url(#clip7202)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  677.44,1521.01 677.44,62.9921 
+  "/>
+<polyline clip-path="url(#clip7202)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  1214.5,1521.01 1214.5,62.9921 
+  "/>
+<polyline clip-path="url(#clip7202)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  1751.57,1521.01 1751.57,62.9921 
+  "/>
+<polyline clip-path="url(#clip7202)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  2288.63,1521.01 2288.63,62.9921 
+  "/>
+<polyline clip-path="url(#clip7202)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  86.9921,1283.27 2352.76,1283.27 
+  "/>
+<polyline clip-path="url(#clip7202)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  86.9921,956.715 2352.76,956.715 
+  "/>
+<polyline clip-path="url(#clip7202)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  86.9921,630.163 2352.76,630.163 
+  "/>
+<polyline clip-path="url(#clip7202)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+  86.9921,303.61 2352.76,303.61 
+  "/>
+<polyline clip-path="url(#clip7200)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  86.9921,1521.01 2352.76,1521.01 
+  "/>
+<polyline clip-path="url(#clip7200)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  86.9921,1521.01 86.9921,62.9921 
+  "/>
+<polyline clip-path="url(#clip7200)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  140.376,1521.01 140.376,1503.51 
+  "/>
+<polyline clip-path="url(#clip7200)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  677.44,1521.01 677.44,1503.51 
+  "/>
+<polyline clip-path="url(#clip7200)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  1214.5,1521.01 1214.5,1503.51 
+  "/>
+<polyline clip-path="url(#clip7200)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  1751.57,1521.01 1751.57,1503.51 
+  "/>
+<polyline clip-path="url(#clip7200)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  2288.63,1521.01 2288.63,1503.51 
+  "/>
+<polyline clip-path="url(#clip7200)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  86.9921,1283.27 114.181,1283.27 
+  "/>
+<polyline clip-path="url(#clip7200)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  86.9921,956.715 114.181,956.715 
+  "/>
+<polyline clip-path="url(#clip7200)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  86.9921,630.163 114.181,630.163 
+  "/>
+<polyline clip-path="url(#clip7200)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  86.9921,303.61 114.181,303.61 
+  "/>
+<g clip-path="url(#clip7200)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 140.376, 1575.01)" x="140.376" y="1575.01">0</text>
+</g>
+<g clip-path="url(#clip7200)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 677.44, 1575.01)" x="677.44" y="1575.01">50</text>
+</g>
+<g clip-path="url(#clip7200)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 1214.5, 1575.01)" x="1214.5" y="1575.01">100</text>
+</g>
+<g clip-path="url(#clip7200)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 1751.57, 1575.01)" x="1751.57" y="1575.01">150</text>
+</g>
+<g clip-path="url(#clip7200)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 2288.63, 1575.01)" x="2288.63" y="1575.01">200</text>
+</g>
+<g clip-path="url(#clip7200)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 1300.77)" x="62.9921" y="1300.77">-1.0</text>
+</g>
+<g clip-path="url(#clip7200)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 974.215)" x="62.9921" y="974.215">-0.5</text>
+</g>
+<g clip-path="url(#clip7200)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 647.663)" x="62.9921" y="647.663">0.0</text>
+</g>
+<g clip-path="url(#clip7200)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 321.11)" x="62.9921" y="321.11">0.5</text>
+</g>
+<g clip-path="url(#clip7200)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:84px; text-anchor:middle;" transform="rotate(0, 1219.87, 73.2)" x="1219.87" y="73.2">Humanoid Standup</text>
+</g>
+<polyline clip-path="url(#clip7202)" style="stroke:#009af9; stroke-width:4; stroke-opacity:1; fill:none" points="
+  151.118,1477.74 161.859,1478.84 172.6,1479.74 183.341,1479.43 194.083,1478.83 204.824,1477.21 215.565,1477.38 226.306,1475.7 237.048,1472.68 247.789,1467.12 
+  258.53,1462.44 269.272,1459.84 280.013,1450.43 290.754,1437.5 301.495,1423.81 312.237,1409.33 322.978,1395.43 333.719,1380.54 344.46,1361.59 355.202,1338.01 
+  365.943,1311.61 376.684,1283.1 387.425,1254.19 398.167,1223.16 408.908,1191.81 419.649,1161.99 430.391,1134.43 441.132,1108.61 451.873,1084.58 462.614,1065 
+  473.356,1047.76 484.097,1029.81 494.838,1009.53 505.579,990.275 516.321,972.505 527.062,955.543 537.803,939.304 548.545,923.83 559.286,912.618 570.027,905.699 
+  580.768,900.934 591.51,897.751 602.251,895.456 612.992,894.004 623.733,891.637 634.475,887.608 645.216,884.6 655.957,884.896 666.699,888.836 677.44,894.987 
+  688.181,900.833 698.922,899.991 709.664,897.149 720.405,890.779 731.146,879.969 741.887,865.834 752.629,848.189 763.37,829.255 774.111,811.314 784.853,792.025 
+  795.594,771.259 806.335,750.54 817.076,730.761 827.818,713.115 838.559,697.995 849.3,684.12 860.041,669.042 870.783,653.183 881.524,638.701 892.265,624.232 
+  903.007,612.176 913.748,601.06 924.489,589.348 935.23,579.928 945.972,573.198 956.713,567.499 967.454,561.483 978.195,558.164 988.937,558.617 999.678,562.622 
+  1010.42,568.269 1021.16,575.58 1031.9,583.405 1042.64,591.626 1053.38,599.15 1064.13,608.783 1074.87,620.436 1085.61,634.717 1096.35,649.574 1107.09,666.544 
+  1117.83,683.681 1128.57,701.261 1139.31,720.705 1150.06,740.166 1160.8,762.044 1171.54,785.528 1182.28,811.284 1193.02,840.248 1203.76,870.893 1214.5,895.039 
+  1225.24,900.69 1235.99,899.014 1246.73,895.836 1257.47,893.042 1268.21,888.283 1278.95,884.5 1289.69,881.833 1300.43,880.981 1311.17,881.764 1321.92,883.893 
+  1332.66,887.656 1343.4,889.769 1354.14,891.16 1364.88,890.621 1375.62,888.327 1386.36,886.057 1397.1,884.975 1407.85,884.125 1418.59,884.919 1429.33,886.941 
+  1440.07,887.04 1450.81,886.762 1461.55,886.498 1472.29,886.042 1483.04,885.482 1493.78,885.047 1504.52,885.044 1515.26,885.186 1526,885.727 1536.74,886.321 
+  1547.48,885.593 1558.22,884.39 1568.97,884.146 1579.71,885.754 1590.45,886.142 1601.19,886.219 1611.93,886.121 1622.67,885.52 1633.41,884.291 1644.15,883.669 
+  1654.9,883.086 1665.64,883.959 1676.38,883.899 1687.12,883.405 1697.86,882.385 1708.6,882.235 1719.34,882.555 1730.08,882.874 1740.83,882.914 1751.57,882.895 
+  1762.31,882.846 1773.05,882.41 1783.79,882.796 1794.53,883.237 1805.27,883.032 1816.01,883.108 1826.76,883.081 1837.5,882.871 1848.24,882.821 1858.98,883.025 
+  1869.72,883.188 1880.46,883.027 1891.2,882.979 1901.94,883.029 1912.69,883.023 1923.43,883.134 1934.17,882.791 1944.91,884.061 1955.65,884.032 1966.39,883.585 
+  1977.13,883.12 1987.87,883.27 1998.62,883.27 2009.36,883.552 2020.1,883.951 2030.84,884.157 2041.58,884.195 2052.32,884.133 2063.06,883.941 2073.81,883.796 
+  2084.55,884.68 2095.29,885.221 2106.03,885.216 2116.77,885.29 2127.51,885.262 2138.25,885.062 2148.99,884.971 2159.74,884.657 2170.48,885.047 2181.22,885.99 
+  2191.96,886.308 2202.7,885.715 2213.44,885.561 2224.18,885.308 2234.92,885.246 2245.67,885.08 2256.41,884.872 2267.15,885.589 2277.89,885.463 2288.63,884.919 
+  
+  "/>
+<polyline clip-path="url(#clip7202)" style="stroke:#e26f46; stroke-width:4; stroke-opacity:1; fill:none" points="
+  151.118,564.123 161.859,564.669 172.6,565.114 183.341,564.953 194.083,564.645 204.824,563.828 215.565,563.906 226.306,563.064 237.048,561.506 247.789,558.751 
+  258.53,556.387 269.272,555.043 280.013,550.368 290.754,543.86 301.495,537.029 312.237,529.744 322.978,522.843 333.719,515.42 344.46,505.942 355.202,494.137 
+  365.943,480.871 376.684,466.706 387.425,452.165 398.167,436.721 408.908,421.021 419.649,406.134 430.391,392.32 441.132,379.391 451.873,367.446 462.614,357.616 
+  473.356,349.002 484.097,340.011 494.838,329.921 505.579,320.291 516.321,311.209 527.062,302.864 537.803,294.826 548.545,287.048 559.286,281.462 570.027,278.002 
+  580.768,275.628 591.51,274.052 602.251,272.893 612.992,272.058 623.733,270.923 634.475,268.953 645.216,267.481 655.957,267.57 666.699,269.422 677.44,272.621 
+  688.181,275.413 698.922,275.117 709.664,273.587 720.405,270.324 731.146,264.972 741.887,257.881 752.629,249.188 763.37,239.727 774.111,230.595 784.853,221.055 
+  795.594,210.641 806.335,200.441 817.076,190.51 827.818,181.626 838.559,174.068 849.3,167.116 860.041,159.553 870.783,151.706 881.524,144.476 892.265,137.271 
+  903.007,131.139 913.748,125.653 924.489,119.818 935.23,115.108 945.972,111.74 956.713,108.904 967.454,105.918 978.195,104.257 988.937,104.481 999.678,106.476 
+  1010.42,109.256 1021.16,112.964 1031.9,116.856 1042.64,120.961 1053.38,124.737 1064.13,129.555 1074.87,135.355 1085.61,142.558 1096.35,149.933 1107.09,158.406 
+  1117.83,166.981 1128.57,175.842 1139.31,185.46 1150.06,195.28 1160.8,206.195 1171.54,217.953 1182.28,230.847 1193.02,245.257 1203.76,260.626 1214.5,272.72 
+  1225.24,275.455 1235.99,274.669 1246.73,273.08 1257.47,271.675 1268.21,269.319 1278.95,267.414 1289.69,266.111 1300.43,265.605 1311.17,266.094 1321.92,267.14 
+  1332.66,269.034 1343.4,270.044 1354.14,270.793 1364.88,270.502 1375.62,269.393 1386.36,268.182 1397.1,267.663 1407.85,267.252 1418.59,267.638 1429.33,268.683 
+  1440.07,268.72 1450.81,268.582 1461.55,268.471 1472.29,268.237 1483.04,267.921 1493.78,267.731 1504.52,267.721 1515.26,267.794 1526,268.06 1536.74,268.372 
+  1547.48,268.005 1558.22,267.413 1568.97,267.284 1579.71,268.098 1590.45,268.278 1601.19,268.314 1611.93,268.266 1622.67,267.981 1633.41,267.364 1644.15,267.025 
+  1654.9,266.725 1665.64,267.174 1676.38,267.16 1687.12,266.927 1697.86,266.41 1708.6,266.319 1719.34,266.494 1730.08,266.654 1740.83,266.683 1751.57,266.659 
+  1762.31,266.63 1773.05,266.431 1783.79,266.605 1794.53,266.812 1805.27,266.742 1816.01,266.772 1826.76,266.751 1837.5,266.652 1848.24,266.638 1858.98,266.741 
+  1869.72,266.817 1880.46,266.73 1891.2,266.713 1901.94,266.708 1912.69,266.747 1923.43,266.778 1934.17,266.622 1944.91,267.248 1955.65,267.23 1966.39,267.017 
+  1977.13,266.772 1987.87,266.851 1998.62,266.851 2009.36,266.96 2020.1,267.2 2030.84,267.308 2041.58,267.321 2052.32,267.284 2063.06,267.163 2073.81,267.126 
+  2084.55,267.555 2095.29,267.813 2106.03,267.838 2116.77,267.858 2127.51,267.831 2138.25,267.75 2148.99,267.692 2159.74,267.563 2170.48,267.749 2181.22,268.203 
+  2191.96,268.368 2202.7,268.083 2213.44,267.989 2224.18,267.88 2234.92,267.836 2245.67,267.748 2256.41,267.654 2267.15,268.008 2277.89,267.954 2288.63,267.678 
+  
+  "/>
+<path clip-path="url(#clip7200)" d="
+M1770.58 1377.01 L2280.76 1377.01 L2280.76 1195.57 L1770.58 1195.57  Z
+  " fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<polyline clip-path="url(#clip7200)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+  1770.58,1377.01 2280.76,1377.01 2280.76,1195.57 1770.58,1195.57 1770.58,1377.01 
+  "/>
+<polyline clip-path="url(#clip7200)" style="stroke:#009af9; stroke-width:4; stroke-opacity:1; fill:none" points="
+  1794.58,1256.05 1938.58,1256.05 
+  "/>
+<g clip-path="url(#clip7200)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:start;" transform="rotate(0, 1962.58, 1273.55)" x="1962.58" y="1273.55">Inst. Reward</text>
+</g>
+<polyline clip-path="url(#clip7200)" style="stroke:#e26f46; stroke-width:4; stroke-opacity:1; fill:none" points="
+  1794.58,1316.53 1938.58,1316.53 
+  "/>
+<g clip-path="url(#clip7200)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:start;" transform="rotate(0, 1962.58, 1334.03)" x="1962.58" y="1334.03">Evaluation</text>
+</g>
+</svg>
+<hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Tuesday 14 January 2020 03:33">Tuesday 14 January 2020</span>. Using Julia version 1.3.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
