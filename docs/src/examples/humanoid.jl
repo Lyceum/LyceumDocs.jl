@@ -219,21 +219,21 @@ seed_threadrngs!(1) #src
 # The MPPI algorithm, and any that you develop, can and should use plotting tools
 # to track progress as they go.
 mppi, env, traj = humanoid_MPPI();
-plot!(
-    plot(traj.rewards, label = "Inst. Reward", title = "Humanoid Standup"),
-    traj.evaluations,
-    label = "Evaluation",
-    legend = :bottomright
+plot(
+    [traj.rewards traj.evaluations]
+    labels = ["Reward" "Evaluation"],
+    title = "Humanoid Standup",
+    legend = :bottomright,
 )
 
 # If one wanted to review the results after training, or prepare plots for presentations,
 # one can load the data from disk instead.
 data = JLSO.load("/tmp/opt_humanoid.jlso")
-plot!(
-    plot(data["rewards"], label = "Inst. Reward", title = "Humanoid Standup"),
-    data["evaluations"],
-    label = "Evaluation",
-    legend = :bottomright
+plot(
+    [data["rewards"] data["evaluations"]],
+    labels = ["Reward" "Evaluation"],
+    title = "Humanoid Standup",
+    legend = :bottomright,
 )
 
 using Test #src
