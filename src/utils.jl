@@ -19,6 +19,8 @@ function process(doc::Document; config = Dict())
     builds = doc.config[:builds]
     paths = map(p -> joinpath(STAGING_DIR, p), PATHS)
 
+    copy_deps(doc)
+
     if doc.kind === :documenter && :markdown in builds
         abs_dst = joinpath(STAGING_DIR, doc.rel_path)
         mkpath(dirname(abs_dst))
@@ -41,6 +43,19 @@ function process(doc::Document; config = Dict())
             Literate.notebook(abs_src, dirname(abs_dst), config = config)
         end
     end
+end
+
+function copy_deps(doc::Document)
+    if !isempty(doc.config[:deps])
+        for rel_path in doc.config[:deps]
+            rel_path = joinpath(dirname(doc.rel_path), rel_path) # relative to doc.root
+            abs_src = joinpath(doc.root, rel_path)
+            abs_dst = joinpath(STAGING_DIR, rel_path)
+            mkpath(dirname(abs_dst))
+            cp(abs_src, abs_dst)
+        end
+    end
+    nothing
 end
 
 function build_pages(group::Group)

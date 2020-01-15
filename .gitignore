@@ -1,3 +1,5 @@
 docs/assets/LyceumExamples/Manifest.toml
 staging
 build
+
+.*.swp

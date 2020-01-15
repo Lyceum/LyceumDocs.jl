@@ -9,8 +9,8 @@ const REPO_DIR = normpath(joinpath(@__DIR__, ".."))
 const DOCS_DIR = joinpath(REPO_DIR, "docs")
 
 const SRC_DIR = joinpath(DOCS_DIR, "src")
-const STAGING_DIR = "staging"
-const BUILD_DIR = "build"
+const STAGING_DIR = joinpath(REPO_DIR, "staging")
+const BUILD_DIR = joinpath(REPO_DIR, "build")
 
 const ASSETS_DIR = joinpath(DOCS_DIR, "assets")
 const EXAMPLE_DIR = joinpath(DOCS_DIR, "assets/LyceumExamples")
@@ -50,6 +50,7 @@ function make(; clean::Bool = false, config = Dict())
 
     @info "Processing Files"
     println()
+    # disable execution of Jupyter cells for Literate files
     config = Dict("execute" => false)
     process(rootgroup, config = config)
 

@@ -7,10 +7,10 @@ uuid = "621f4979-c628-5d54-868e-fcf4e3e8185c"
 version = "0.5.0"
 
 [[AbstractTrees]]
-deps = ["Markdown", "Test"]
-git-tree-sha1 = "6621d9645702c1c4e6970cc6a3eae440c768000b"
+deps = ["Markdown"]
+git-tree-sha1 = "8201f932428d25a2e2903300764515754847d87d"
 uuid = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
-version = "0.2.1"
+version = "0.3.0"
 
 [[Adapt]]
 deps = ["LinearAlgebra"]
@@ -80,9 +80,9 @@ version = "0.2.0"
 
 [[CSTParser]]
 deps = ["Tokenize"]
-git-tree-sha1 = "e8166cc32a3bfedc97eda16db428b1faba29ca8e"
+git-tree-sha1 = "2d85216856653e583207af1662e8b38e628cbec4"
 uuid = "00ebfdb7-1f24-5e51-bd34-a7502290713f"
-version = "2.0.0"
+version = "2.1.0"
 
 [[CUDAapi]]
 deps = ["Libdl", "Logging"]
@@ -217,9 +217,9 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[Distributions]]
 deps = ["FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns"]
-git-tree-sha1 = "743809ded6db3a3145565a71ee9c8b23f3a4c463"
+git-tree-sha1 = "d188577fb30465c6506918a7dd3b853a09b562e8"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.22.0"
+version = "0.22.1"
 
 [[DocStringExtensions]]
 deps = ["LibGit2", "Markdown", "Pkg", "Test"]
@@ -244,10 +244,10 @@ uuid = "da5c29d0-fa7d-589e-88eb-ea29b0a81949"
 version = "0.4.0"
 
 [[EzXML]]
-deps = ["BinaryProvider", "Libdl", "Printf"]
-git-tree-sha1 = "469de9cb996a9c03f31905619ff3c33e905711f3"
+deps = ["Printf", "XML2_jll"]
+git-tree-sha1 = "0fa3b52a04a4e210aeb1626def9c90df3ae65268"
 uuid = "8f5d6c58-4d21-5cfd-889c-e3ad7ee6a615"
-version = "0.9.5"
+version = "1.1.0"
 
 [[FFMPEG]]
 deps = ["BinaryProvider", "Libdl"]
@@ -277,9 +277,9 @@ uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 
 [[FillArrays]]
 deps = ["LinearAlgebra", "Random", "SparseArrays"]
-git-tree-sha1 = "1a9fe4e1323f38de0ba4da49eafd15b25ec62298"
+git-tree-sha1 = "fec413d4fc547992eb62a5c544cedb6d7853c1f5"
 uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
-version = "0.8.2"
+version = "0.8.4"
 
 [[FixedPointNumbers]]
 git-tree-sha1 = "d14a6fa5890ea3a7e5dcab6811114f132fec2b4b"
@@ -288,9 +288,9 @@ version = "0.6.1"
 
 [[Flux]]
 deps = ["AbstractTrees", "Adapt", "CodecZlib", "Colors", "CuArrays", "DelimitedFiles", "Juno", "MacroTools", "NNlib", "Pkg", "Printf", "Random", "Reexport", "SHA", "Statistics", "StatsBase", "Test", "ZipFile", "Zygote"]
-git-tree-sha1 = "ac27a5357135652f804702e7e7749f9af3a19f24"
+git-tree-sha1 = "8134adbb0f10b0d22b22f8b4299d0d20509edc5f"
 uuid = "587475ba-b771-5e3f-ad9e-33799f191a9c"
-version = "0.10.0"
+version = "0.10.1"
 
 [[ForwardDiff]]
 deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "NaNMath", "Random", "SpecialFunctions", "StaticArrays"]
@@ -307,6 +307,12 @@ deps = ["Libdl", "Libglvnd_jll", "Pkg", "X11_jll", "Xorg_libXi_jll"]
 git-tree-sha1 = "cbc0778a866389f895e2101bd18ee23bc7b5182f"
 uuid = "bde7f898-03f7-559e-8810-194d950ce600"
 version = "2.1.0+2"
+
+[[GLFW]]
+deps = ["GLFW_jll"]
+git-tree-sha1 = "5f7c6f26314b091efbaa7734a2a903b775461122"
+uuid = "f7f18e0c-5ee9-5ccd-a5bf-e8befd85ed98"
+version = "3.2.1"
 
 [[GLFW_jll]]
 deps = ["Libdl", "Libglvnd_jll", "Pkg", "X11_jll", "Xorg_libXcursor_jll", "Xorg_libXi_jll", "Xorg_libXinerama_jll", "Xorg_libXrandr_jll"]
@@ -503,8 +509,8 @@ version = "2.2.1"
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
 [[Lyceum]]
-deps = ["LyceumAI", "LyceumBase", "LyceumMuJoCo", "MuJoCo", "Pkg", "Reexport", "Shapes", "UniversalLogger"]
-git-tree-sha1 = "a12aa71f73db3b63a2d991e0ac0b3133af368246"
+deps = ["LyceumAI", "LyceumBase", "LyceumMuJoCo", "LyceumMuJoCoViz", "MuJoCo", "Pkg", "Reexport", "Shapes", "UniversalLogger"]
+git-tree-sha1 = "eb2e1c22446eaf5b0fa40bed06aa63b1ca68b29d"
 repo-rev = "master"
 repo-url = "https://github.com/Lyceum/Lyceum.jl.git"
 uuid = "f25b5985-59c0-418b-a573-42c079f3f644"
@@ -512,7 +518,7 @@ version = "0.1.0"
 
 [[LyceumAI]]
 deps = ["Base64", "Distances", "EllipsisNotation", "FastClosures", "Flux", "Future", "IterativeSolvers", "LearnBase", "LinearAlgebra", "LyceumBase", "LyceumMuJoCo", "MLDataPattern", "MacroTools", "MuJoCo", "MuJoCo_jll", "Parameters", "Random", "Shapes", "StaticArrays", "Statistics", "UniversalLogger", "UnsafeArrays", "Zygote"]
-git-tree-sha1 = "156631a5bdc36e777f381d4116d99ba75bf42fad"
+git-tree-sha1 = "abb95af49e03e66a23a6c77bf7da95ae7c11493d"
 repo-rev = "master"
 repo-url = "https://github.com/Lyceum/LyceumAI.jl.git"
 uuid = "6917c76a-ac01-4302-a33e-8c456ab70f71"
@@ -520,7 +526,7 @@ version = "0.1.0"
 
 [[LyceumBase]]
 deps = ["Adapt", "BenchmarkTools", "Dates", "Distributions", "ElasticArrays", "EllipsisNotation", "Future", "InteractiveUtils", "JLSO", "LibGit2", "LinearAlgebra", "Logging", "MacroTools", "Parameters", "Pkg", "Random", "Shapes", "StaticArrays", "Statistics", "Test", "UnicodePlots", "UniversalLogger", "UnsafeArrays"]
-git-tree-sha1 = "d73c452ce85273e6797731546ea239f5b4c79db3"
+git-tree-sha1 = "c361e7ad67a398d571962131e9659860ab73a514"
 repo-rev = "master"
 repo-url = "https://github.com/Lyceum/LyceumBase.jl.git"
 uuid = "db31fed1-ca1e-4084-8a49-12fae1996a55"
@@ -532,6 +538,14 @@ git-tree-sha1 = "b260cf929c35aa35d33edb7378f5d4ecca34ead9"
 repo-rev = "master"
 repo-url = "https://github.com/Lyceum/LyceumMuJoCo.jl.git"
 uuid = "48b9757e-04b8-4dbf-b6ed-75c13d9e4026"
+version = "0.1.0"
+
+[[LyceumMuJoCoViz]]
+deps = ["BangBang", "FFMPEG", "GLFW", "LyceumBase", "LyceumMuJoCo", "MuJoCo", "Observables", "Printf", "Shapes", "StaticArrays"]
+git-tree-sha1 = "de784316d6b39401832a13e931b47fde45e78605"
+repo-rev = "master"
+repo-url = "https://github.com/Lyceum/LyceumMuJoCoViz.jl.git"
+uuid = "409fd311-7925-44f6-a514-6be572b34fdd"
 version = "0.1.0"
 
 [[MKL_jll]]
@@ -641,6 +655,12 @@ git-tree-sha1 = "928b8ca9b2791081dc71a51c55347c27c618760f"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 version = "0.3.3"
 
+[[Observables]]
+deps = ["Test"]
+git-tree-sha1 = "dc02cec22747d1d10d9f70d8a1c03432b5bfbcd0"
+uuid = "510215fc-4207-5dde-b226-833fc4488ee2"
+version = "0.2.3"
+
 [[OpenBLAS_jll]]
 deps = ["Libdl", "Pkg"]
 git-tree-sha1 = "3a6e5767e8ae022871c19162cc3ecd80748bd3dc"
@@ -701,9 +721,9 @@ version = "1.0.1"
 
 [[PlotUtils]]
 deps = ["Colors", "Dates", "Printf", "Random", "Reexport"]
-git-tree-sha1 = "7622cbde3200a9876a14ba85d66f25d7f4e7a6ca"
+git-tree-sha1 = "22bd7d0a1f4665d66317d6c89a57f6bba9f2560d"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
-version = "0.6.1"
+version = "0.6.2"
 
 [[Plots]]
 deps = ["Base64", "Contour", "Dates", "FFMPEG", "FixedPointNumbers", "GR", "GeometryTypes", "JSON", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "Printf", "REPL", "Random", "RecipesBase", "Reexport", "Requires", "Showoff", "SparseArrays", "Statistics", "StatsBase", "UUIDs"]
@@ -895,9 +915,9 @@ version = "0.3.0"
 
 [[TimeZones]]
 deps = ["Dates", "EzXML", "Mocking", "Printf", "Serialization", "Unicode"]
-git-tree-sha1 = "29c7ae3f50f291358043e21db47b3e1a516df891"
+git-tree-sha1 = "0271dc890dd1447da1568510937bd5b3a6b51b58"
 uuid = "f269a46b-ccf7-5d73-abea-4c690281aa53"
-version = "0.10.3"
+version = "0.9.2"
 
 [[TimerOutputs]]
 deps = ["Printf"]
@@ -1140,10 +1160,10 @@ uuid = "8f1865be-045e-5c20-9c9f-bfbfb0764568"
 version = "4.3.1+0"
 
 [[ZipFile]]
-deps = ["BinaryProvider", "Libdl", "Printf"]
-git-tree-sha1 = "580ce62b6c14244916cc28ad54f8a2e2886f843d"
+deps = ["Libdl", "Printf", "Zlib_jll"]
+git-tree-sha1 = "5de8320a46812da1a8ca98b16a8a4546d44efa62"
 uuid = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
-version = "0.8.3"
+version = "0.9.0"
 
 [[Zlib_jll]]
 deps = ["Libdl", "Pkg"]
@@ -1153,9 +1173,9 @@ version = "1.2.11+7"
 
 [[Zygote]]
 deps = ["DiffRules", "FFTW", "FillArrays", "ForwardDiff", "IRTools", "InteractiveUtils", "LinearAlgebra", "MacroTools", "NNlib", "NaNMath", "Random", "Requires", "SpecialFunctions", "Statistics", "ZygoteRules"]
-git-tree-sha1 = "7e293d7bef87c2cf2847e99ed0da4edadb75fe90"
+git-tree-sha1 = "74382bcc4c1e8075e14554da67d75565f8fb7827"
 uuid = "e88e6eb3-aa80-5325-afca-941959d7151f"
-version = "0.4.4"
+version = "0.4.5"
 
 [[ZygoteRules]]
 deps = ["MacroTools"]

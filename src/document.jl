@@ -36,6 +36,7 @@ const CONFIG_DEFAULTS = Dict(
     :short_title => :use_title,
     :title => nothing,
     :weight => nothing,
+    :deps => []
 )
 
 
@@ -51,7 +52,8 @@ function group(root)
             continue
         elseif isdir(joinpath(root, child))
             push!(grp.children, group(child, grp))
-        else
+        elseif endswith(child, ".jl") || endswith(child, ".md")
+            println(child)
             push!(grp.children, document(child, grp))
         end
     end
@@ -71,7 +73,7 @@ function group(rel_path, parent::Group)
             child = joinpath(rel_path, child)
             if isdir(joinpath(parent.root, child))
                 push!(grp.children, group(child, grp))
-            else
+            elseif endswith(child, ".jl") || endswith(child, ".md")
                 push!(grp.children, document(child, grp))
             end
         end
