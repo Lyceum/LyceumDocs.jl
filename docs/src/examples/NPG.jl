@@ -58,7 +58,7 @@ policy = DiagGaussianPolicy(
         σ = tanh,
         initb = Flux.glorot_uniform,
         initb_final = Flux.glorot_uniform,
-        dtype = Float32
+        dtype = Float32,
     ),
     zeros(Float32, dact),
 );
@@ -76,7 +76,7 @@ value = multilayer_perceptron(
     σ = Flux.relu,
     initb = Flux.glorot_uniform,
     initb_final = Flux.glorot_uniform,
-    dtype = Float32
+    dtype = Float32,
 );
 
 # Next, we set up the optimization pipeline for `value`. We use a mini-batch size of 64

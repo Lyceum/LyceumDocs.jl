@@ -33,7 +33,7 @@ using LyceumBase, LyceumBase.Tools, LyceumAI, LyceumMuJoCo, MuJoCo, UniversalLog
 # dispatch on this struct through Julia's [multiple dispatch](https://en.wikipedia.org/wiki/Multiple_dispatch)
 # mechanism. When an algorithm calls a function such as `getobs!(obs, env)`, Julia will select from
 # all functions with that name depending on `typeof(obs)` and `typeof(env)`.
-struct Humanoid{S <: MJSim} <: AbstractMuJoCoEnvironment
+struct Humanoid{S<:MJSim} <: AbstractMuJoCoEnvironment
     sim::S
 end
 
@@ -43,8 +43,8 @@ LyceumMuJoCo.getsim(env::Humanoid) = env.sim #src (needs to be here for below ex
 # threaded context. To use `Humanoid` in a multi-threaded context, one could simply create
 # `Threads.nthreads()` instances of `Humanoid`:
 modelpath = joinpath(@__DIR__, "humanoid.xml")
-envs = [Humanoid(MJSim(modelpath, skip = 2)) for i=1:Threads.nthreads()]
-Threads.@threads for i=1:Threads.nthreads()
+envs = [Humanoid(MJSim(modelpath, skip = 2)) for i = 1:Threads.nthreads()]
+Threads.@threads for i = 1:Threads.nthreads()
     thread_env = envs[Threads.threadid()]
     step!(thread_env)
 end
@@ -66,7 +66,7 @@ end
 
 # We can then use `tconstruct` as follows:
 envs = tconstruct(Humanoid, Threads.nthreads())
-Threads.@threads for i=1:Threads.nthreads()
+Threads.@threads for i = 1:Threads.nthreads()
     thread_env = envs[Threads.threadid()]
     step!(thread_env)
 end
@@ -220,8 +220,7 @@ seed_threadrngs!(1) #src
 # to track progress as they go.
 mppi, env, traj = humanoid_MPPI();
 plot(
-    [traj.rewards traj.evaluations]
-    labels = ["Reward" "Evaluation"],
+    [traj.rewards traj.evaluations]labels = ["Reward" "Evaluation"],
     title = "Humanoid Standup",
     legend = :bottomright,
 )
