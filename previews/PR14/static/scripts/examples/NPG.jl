@@ -18,7 +18,7 @@ policy = DiagGaussianPolicy(
         σ = tanh,
         initb = Flux.glorot_uniform,
         initb_final = Flux.glorot_uniform,
-        dtype = Float32
+        dtype = Float32,
     ),
     zeros(Float32, dact),
 );
@@ -31,7 +31,7 @@ value = multilayer_perceptron(
     σ = Flux.relu,
     initb = Flux.glorot_uniform,
     initb_final = Flux.glorot_uniform,
-    dtype = Float32
+    dtype = Float32,
 );
 
 valueloss(bl, X, Y) = Flux.mse(vec(bl(X)), vec(Y))

@@ -2,15 +2,15 @@ using LinearAlgebra, Random, Statistics
 using Plots, UnicodePlots, JLSO
 using LyceumBase, LyceumBase.Tools, LyceumAI, LyceumMuJoCo, MuJoCo, UniversalLogger, Shapes
 
-struct Humanoid{S <: MJSim} <: AbstractMuJoCoEnvironment
+struct Humanoid{S<:MJSim} <: AbstractMuJoCoEnvironment
     sim::S
 end
 
 LyceumMuJoCo.getsim(env::Humanoid) = env.sim #src (needs to be here for below example to work)
 
 modelpath = joinpath(@__DIR__, "humanoid.xml")
-envs = [Humanoid(MJSim(modelpath, skip = 2)) for i=1:Threads.nthreads()]
-Threads.@threads for i=1:Threads.nthreads()
+envs = [Humanoid(MJSim(modelpath, skip = 2)) for i = 1:Threads.nthreads()]
+Threads.@threads for i = 1:Threads.nthreads()
     thread_env = envs[Threads.threadid()]
     step!(thread_env)
 end
@@ -22,7 +22,7 @@ function LyceumMuJoCo.tconstruct(::Type{Humanoid}, n::Integer)
 end
 
 envs = tconstruct(Humanoid, Threads.nthreads())
-Threads.@threads for i=1:Threads.nthreads()
+Threads.@threads for i = 1:Threads.nthreads()
     thread_env = envs[Threads.threadid()]
     step!(thread_env)
 end
@@ -126,8 +126,7 @@ end
 
 mppi, env, traj = humanoid_MPPI();
 plot(
-    [traj.rewards traj.evaluations]
-    labels = ["Reward" "Evaluation"],
+    [traj.rewards traj.evaluations]labels = ["Reward" "Evaluation"],
     title = "Humanoid Standup",
     legend = :bottomright,
 )
