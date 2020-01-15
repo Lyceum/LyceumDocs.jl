@@ -9,7 +9,9 @@ using Plots                             # For plotting the results
 env = LyceumMuJoCo.HopperV2();
 dobs, dact = length(obsspace(env)), length(actionspace(env));
 
-policy = DiagGaussianPolicy(
+seed_threadrngs!(1)
+
+const policy = DiagGaussianPolicy(
     multilayer_perceptron(
         dobs,
         32,
@@ -23,7 +25,7 @@ policy = DiagGaussianPolicy(
     zeros(Float32, dact),
 );
 
-value = multilayer_perceptron(
+const value = multilayer_perceptron(
     dobs,
     128,
     128,
@@ -35,14 +37,15 @@ value = multilayer_perceptron(
 );
 
 valueloss(bl, X, Y) = Flux.mse(vec(bl(X)), vec(Y))
-valuetrainer = FluxTrainer(
+stopcb(x) = x.nepochs > 2
+const valuetrainer = FluxTrainer(
     optimiser = ADAM(1e-3),
     szbatch = 64,
     lossfn = valueloss,
-    stopcb = x -> x.nepochs > 2,
+    stopcb = stopcb
 );
 
-npg = NaturalPolicyGradient(
+const npg = NaturalPolicyGradient(
     n -> tconstruct(LyceumMuJoCo.HopperV2, n),
     policy,
     value,
@@ -105,8 +108,6 @@ function hopper_NPG(npg::NaturalPolicyGradient, plot::Bool)
     end
     exper, lg
 end
-# Seed the per-thread global RNGs
-seed_threadrngs!(1)
 exper, lg = hopper_NPG(npg, false);
 
 plot(
