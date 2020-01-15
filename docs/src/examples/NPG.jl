@@ -1,5 +1,5 @@
 #cfg title = "Learning a control policy"
-#cfg weight = 11
+#cfg weight = 12
 #cfg active = true
 
 #md # ## Overview

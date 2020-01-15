@@ -1,5 +1,5 @@
 #cfg title = "Creating a MuJoCo Environment"
-#cfg weight = 13
+#cfg weight = 11
 #cfg active = true
 #cfg deps = ["humanoid.xml"]
 

@@ -1,5 +1,5 @@
 #cfg title = "Using the visualizer"
-#cfg weight = 12
+#cfg weight = 13
 #cfg active = true
 #cfg deps = ["visualize.png"]
 
