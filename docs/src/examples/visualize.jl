@@ -61,6 +61,7 @@ end
 #md # viz_hopper_NPG()
 #md # ```
 #jl viz_hopper_NPG()
+#nb viz_hopper_NPG()
 
 #md # You should see the following:
 #md # ![visualizer](visualize.png)
