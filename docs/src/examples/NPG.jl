@@ -1,4 +1,4 @@
-#cfg title = "Learning a control policy"
+#cfg title = "Learning a Control Policy"
 #cfg weight = 12
 #cfg active = true
 
