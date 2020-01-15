@@ -220,7 +220,8 @@ seed_threadrngs!(1) #src
 # to track progress as they go.
 mppi, env, traj = humanoid_MPPI();
 plot(
-    [traj.rewards traj.evaluations]labels = ["Reward" "Evaluation"],
+    [traj.rewards traj.evaluations],
+    labels = ["Reward" "Evaluation"],
     title = "Humanoid Standup",
     legend = :bottomright,
 )
