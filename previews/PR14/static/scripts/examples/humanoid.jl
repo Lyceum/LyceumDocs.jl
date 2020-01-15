@@ -125,19 +125,19 @@ function humanoid_MPPI(etype = Humanoid; T = 200, H = 64, K = 64)
 end
 
 mppi, env, traj = humanoid_MPPI();
-plot!(
-    plot(traj.rewards, label = "Inst. Reward", title = "Humanoid Standup"),
-    traj.evaluations,
-    label = "Evaluation",
-    legend = :bottomright
+plot(
+    [traj.rewards traj.evaluations]
+    labels = ["Reward" "Evaluation"],
+    title = "Humanoid Standup",
+    legend = :bottomright,
 )
 
 data = JLSO.load("/tmp/opt_humanoid.jlso")
-plot!(
-    plot(data["rewards"], label = "Inst. Reward", title = "Humanoid Standup"),
-    data["evaluations"],
-    label = "Evaluation",
-    legend = :bottomright
+plot(
+    [data["rewards"] data["evaluations"]],
+    labels = ["Reward" "Evaluation"],
+    title = "Humanoid Standup",
+    legend = :bottomright,
 )
 
 # This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jl
