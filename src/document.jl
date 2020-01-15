@@ -48,7 +48,6 @@ function group(root)
     grp = Group(root, ".", Node[], config)
 
     for child in readdir(root)
-        println(child)
         if child == "_config.jl"
             continue
         elseif isdir(joinpath(root, child))

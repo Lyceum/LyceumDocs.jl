@@ -50,7 +50,8 @@ function make(; clean::Bool = false, config = Dict())
 
     @info "Processing Files"
     println()
-    config = Dict("execute" => false) # disable execution of Jupyer cells for Literate files
+    # disable execution of Jupyter cells for Literate files
+    config = Dict("execute" => false)
     process(rootgroup, config = config)
 
     pages = build_pages(rootgroup)
