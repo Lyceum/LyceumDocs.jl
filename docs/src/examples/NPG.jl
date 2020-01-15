@@ -11,6 +11,7 @@
 # PPO, and other policy gradient methods. See the documentation for `NaturalPolicyGradient`
 # for full implementation details.
 
+
 #md # ## The Code
 
 # First, let's go head and grab all the dependencies:
@@ -26,6 +27,10 @@ using Plots                             # For plotting the results
 # environment-specific values, such as the size of the observation and action vectors:
 env = LyceumMuJoCo.HopperV2();
 dobs, dact = length(obsspace(env)), length(actionspace(env));
+
+# We'll also seed the per-thread global RNGs:
+seed_threadrngs!(1)
+
 
 #md # ### Policy Gradient Components
 
@@ -49,7 +54,7 @@ dobs, dact = length(obsspace(env)), length(actionspace(env));
 # initialized to 0. Both ``\theta_1`` and ``\theta_2`` are learned in this example.
 # Note that ``\mu_{\theta_1}`` is a _state-dependent_ mean while ``\Sigma_{\theta_2}``
 # is a _global_ covariance.
-policy = DiagGaussianPolicy(
+const policy = DiagGaussianPolicy(
     multilayer_perceptron(
         dobs,
         32,
@@ -68,7 +73,7 @@ policy = DiagGaussianPolicy(
 # represent using a 2-layer, feedforward neural network where each layer has a width of
 # 128 and uses the ReLU activation function. The model weights are initialized using
 # Glorot Uniform initialization as above.
-value = multilayer_perceptron(
+const value = multilayer_perceptron(
     dobs,
     128,
     128,
@@ -84,14 +89,14 @@ value = multilayer_perceptron(
 # iterator that loops on the model provided, performing a single step of gradient
 # descent at each iteration. The result at each loop is passed to `stopcb` below, so you
 # can quit after a number of epochs, convergence, or other criteria; here it's capped at
-# two epochs using an anonymous function. See the documentation for `FluxTrainer` for more
-# information.
+# two epochs. See the documentation for `FluxTrainer` for more information.
 valueloss(bl, X, Y) = Flux.mse(vec(bl(X)), vec(Y))
-valuetrainer = FluxTrainer(
+stopcb(x) = x.nepochs > 2
+const valuetrainer = FluxTrainer(
     optimiser = ADAM(1e-3),
     szbatch = 64,
     lossfn = valueloss,
-    stopcb = x -> x.nepochs > 2,
+    stopcb = stopcb
 );
 
 # The `NaturalPolicyGradient` iterator is a type that pre-allocates all necesary
@@ -105,7 +110,7 @@ valuetrainer = FluxTrainer(
 # `Hmax` and total number of samples per iteration, `N`. Under the hood,
 # `NaturalPolicyGradient` will use approximately `div(N, Hmax)` threads to perform the
 # sampling.
-npg = NaturalPolicyGradient(
+const npg = NaturalPolicyGradient(
     n -> tconstruct(LyceumMuJoCo.HopperV2, n),
     policy,
     value,
@@ -116,6 +121,7 @@ npg = NaturalPolicyGradient(
     Hmax = 1000,
     N = 10240,
 );
+
 
 #md # ### Running Experiments
 
@@ -181,8 +187,6 @@ function hopper_NPG(npg::NaturalPolicyGradient, plot::Bool)
     end
     exper, lg
 end
-## Seed the per-thread global RNGs
-seed_threadrngs!(1)
 exper, lg = hopper_NPG(npg, false);
 
 # Let's go ahead and plot the final reward trajectory for our stochastic and mean policies
@@ -207,4 +211,4 @@ exper[:logs] = get(lg)
 finish!(exper); # flushes everything to disk
 
 using Test #src
-@test lg[:algstate][:meantraj_reward][end] > 0 #src
+@test lg[:algstate][:stoctraj_reward][end] > 1000 #src
