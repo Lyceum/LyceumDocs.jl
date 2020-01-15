@@ -1,6 +1,7 @@
 module LyceumDocs
 
 using Lyceum, Pkg, Documenter, Literate, DevTools, Markdown, YAML
+using LyceumBase
 
 const AbsStr = AbstractString
 const TupleN{T,N} = NTuple{N,T}
@@ -35,7 +36,7 @@ include("examples.jl")
 include("package_definition.jl")
 
 
-function make(; clean::Bool = false, config = Dict())
+function make(; clean::Bool = false, skipliterate::Bool = false, config = Dict())
     if isdir(STAGING_DIR) && clean
         @info "Cleaning staging dir ($(STAGING_DIR))"
         println()
@@ -44,8 +45,13 @@ function make(; clean::Bool = false, config = Dict())
         error("$STAGING_DIR exists but clean was false")
     end
 
+    # TODO bundle_examples() fails unless these exist, which only happens if there is
+    # at least one example
+    mkpath(joinpath(STAGING_DIR, PATHS.script))
+    mkpath(joinpath(STAGING_DIR, PATHS.notebook))
+
     @info "Building Source Tree"
-    rootgroup = group(SRC_DIR)
+    rootgroup = group(SRC_DIR, skipliterate = skipliterate)
     isempty(rootgroup.children) && error("No source files found in $(SRC_DIR)")
 
     @info "Processing Files"
@@ -87,14 +93,17 @@ function make(; clean::Bool = false, config = Dict())
         source = relpath(STAGING_DIR, DOCS_DIR),
     )
 
-    @info "Deploying docs"
-    println()
-    deploydocs(
-        repo = "github.com/Lyceum/LyceumDocs.jl.git",
-        push_preview = true,
-        root = DOCS_DIR,
-        target = relpath(BUILD_DIR, DOCS_DIR),
-    )
+    if !islocalbuild()
+        @info "Deploying docs"
+        deploydocs(
+            repo = "github.com/Lyceum/LyceumDocs.jl.git",
+            push_preview = true,
+            root = DOCS_DIR,
+            target = relpath(BUILD_DIR, DOCS_DIR),
+        )
+    else
+        @info "Not deploying docs (local build detected)"
+    end
 end
 
 end
