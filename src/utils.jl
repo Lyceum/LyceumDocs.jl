@@ -1,11 +1,14 @@
 function process(group::Group; config = Dict())
     for child in group.children
-        child.config[:active] && process(child, config = config)
+        #child.config[:active] && process(child, config = config)
+        process(child, config = config)
     end
     group
 end
 
 function process(doc::Document; config = Dict())
+    !doc.config[:active] && return
+
     abs_src = joinpath(doc.root, doc.rel_path)
     config = deepcopy(config)
 

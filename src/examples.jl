@@ -62,8 +62,7 @@ function bundle_examples()
         proj = mkdir(joinpath(tmpdir, basename(EXAMPLE_DIR)))
         create_example_project(proj)
         isdir(paths.script) && cp(paths.script, joinpath(proj, basename(paths.script)))
-        isdir(paths.notebook) &&
-        cp(paths.notebook, joinpath(proj, basename(paths.notebook)))
+        isdir(paths.notebook) && cp(paths.notebook, joinpath(proj, basename(paths.notebook)))
         run(Pkg.PlatformEngines.gen_package_cmd(tmpdir, paths.examples_tarfile))
     end
 end

@@ -41,7 +41,7 @@ const CONFIG_DEFAULTS = Dict(
 
 
 
-function group(root)
+function group(root; skipliterate::Bool = false)
     config = parsefile_config(joinpath(root, "_config.jl"))
     inheritconfig!(config, CONFIG_DEFAULTS)
 
@@ -51,16 +51,17 @@ function group(root)
         if child == "_config.jl"
             continue
         elseif isdir(joinpath(root, child))
-            push!(grp.children, group(child, grp))
-        elseif endswith(child, ".jl") || endswith(child, ".md")
-            println(child)
+            push!(grp.children, group(child, grp; skipliterate = skipliterate))
+        elseif endswith(child, ".jl") && !skipliterate
+            push!(grp.children, document(child, grp))
+        elseif endswith(child, ".md")
             push!(grp.children, document(child, grp))
         end
     end
     grp
 end
 
-function group(rel_path, parent::Group)
+function group(rel_path, parent::Group; skipliterate = false)
     config = parsefile_config(joinpath(parent.root, rel_path, "_config.jl"))
     inheritconfig!(config, parent.config)
 
@@ -73,7 +74,9 @@ function group(rel_path, parent::Group)
             child = joinpath(rel_path, child)
             if isdir(joinpath(parent.root, child))
                 push!(grp.children, group(child, grp))
-            elseif endswith(child, ".jl") || endswith(child, ".md")
+            elseif endswith(child, ".jl") && !skipliterate
+                push!(grp.children, document(child, grp))
+            elseif endswith(child, ".md")
                 push!(grp.children, document(child, grp))
             end
         end
