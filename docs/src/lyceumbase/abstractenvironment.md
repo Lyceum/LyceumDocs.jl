@@ -1,5 +1,5 @@
 ```@cfg
-title = AbstractEnvironment
+title = "AbstractEnvironment"
 weight = 10
 ```
 
@@ -7,45 +7,94 @@ weight = 10
 CurrentModule = LyceumDocs.LyceumBase
 ```
 
-What follows is the `AbstractEnvironment` interface in its entirety. The methods comprising this interface can be divided. The remainder are built upon the required
-methods and thus do not need to be implemented for each subtype of `AbstractEnvironment`.
+## Overview
 
-| Required methods               |                        | Brief description                                                                     |
-|:------------------------------ |:---------------------- |:------------------------------------------------------------------------------------- |
-| `iterate(iter)`                |                        | Returns either a tuple of the first item and initial state or [`nothing`](@ref) if empty        |
+What follows is the `AbstractEnvironment` interface in its entirety. For users implementing
+new environments, only a subset of the methods discussed below are required. The remaining
+methods are built off of that subset and should not be implemented directly. Some of the
+required methods may have defaults.
+
+**Required Methods**
+
+* State
+  * `statespace(env)`
+  * `getstate!(state, env)`
+  * `setstate!(env, state)`
+* Observation
+  * `obsspace(env)`
+  * `getobs!(obs, env)`
+* Action
+  * `actionspace(env)`
+  * `getaction!(action, env)`
+  * `setaction!(env, action)`
+* Reward
+  * `rewardspace(env)`
+  * `getreward(env)`
+* Evaluation
+  * `evalspace(env)`
+  * `geteval(env)`
+* Simulation
+  * `reset!(env)`
+  * `randreset!(env)`
+  * `step!(env)`
+  * `isdone(env)`
+  * `timestep(env)`
+  * `Base.time(env)`
+
+
+## API
 
 ```@docs
 AbstractEnvironment
+```
 
+### State
+
+```@docs
 statespace
 getstate!
 setstate!
 getstate
+```
 
+### Observation
+
+```@docs
 obsspace
 getobs!
 getobs
+```
 
+### Action
+
+```@docs
 actionspace
 getaction!
 setaction!
 getaction
+```
 
+### Reward
+
+```@docs
 rewardspace
 getreward
+```
 
+### Evaluation
+
+```@docs
 evalspace
 geteval
+```
 
+### Simulation
+
+```@docs
 reset!
 randreset!
 step!
 isdone
 timestep
 Base.time
-spaces
-```
-
-```@eval
-error(@__MODULE__)
 ```
