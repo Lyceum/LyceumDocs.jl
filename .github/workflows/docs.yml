@@ -22,13 +22,13 @@ jobs:
           arch: ${{ matrix.julia-arch }}
       - name: Add registry
         run: |
-          julia --color=yes --project -e 'using Pkg; Registry.add(RegistrySpec(url="https://github.com/Lyceum/LyceumRegistry.git"))'
-          julia --color=yes --project -e 'using Pkg; Registry.add(RegistrySpec(url="https://github.com/JuliaRegistries/General.git"))'
+          julia --color=yes --project -e 'using Pkg; Registry.add(RegistrySpec(url = "https://github.com/Lyceum/LyceumRegistry.git"))'
+          julia --color=yes --project -e 'using Pkg; Registry.add(RegistrySpec(url = "https://github.com/JuliaRegistries/General.git"))'
         shell: bash
       - uses: julia-actions/julia-buildpkg@master
       - name: Build and deploy
         env:
-          MUJOCOJL_TEST_KEY: ${{ secrets.MUJOCOJL_TEST_KEY }}
+          MUJOCO_KEY: ${{ secrets.MUJOCO_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # For authentication with GitHub Actions token
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
         run: julia --project -e 'using LyceumDocs; LyceumDocs.make()'
