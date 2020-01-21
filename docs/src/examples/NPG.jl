@@ -41,10 +41,10 @@ seed_threadrngs!(1)
 # this example. Specifically, our policy is represented as a multivariate Gaussian
 # distribution of the form:
 # ```math
-# \pi(a | s) = \mathcal{N}(\mu_{\theta_1}(\text{obs}), \Sigma_{\theta_2})
+# \pi(a | o) \sim \mathcal{N}(\mu_{\theta_1}(o), \Sigma_{\theta_2})
 # ```
 # where ``\mu_{\theta_1}`` is a neural network, parameterized by ``\theta_1``, that maps
-# an observation `obs` to a mean action and ``\Sigma_{\theta_2}`` is a diagonal
+# an observation to a mean action and ``\Sigma_{\theta_2}`` is a diagonal
 # covariance matrix parameterized by ``\theta_2``, the diagonal entries of the matrix.
 # For ``\mu_{\theta_1}`` we utilize a 2-layer neural network, where each layer has a "width"
 # of 32. We use tanh activations for each hidden layer and initialize the network weights

@@ -77,7 +77,7 @@ function make(; clean::Bool = false, skipliterate::Bool = false, config = Dict()
     println()
     makedocs(;
         # modules = [Lyceum, Lyceum.LYCEUM_PACKAGES...], # TODO
-        modules = [LyceumBase],
+        modules = [LyceumBase, LyceumAI],
         format = Documenter.HTML(
             canonical = "https://docs.lyceum.ml/dev/",
             prettyurls = !islocalbuild(),
