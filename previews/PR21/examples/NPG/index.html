@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Learning a Control Policy · Lyceum</title><link rel="canonical" href="https://docs.lyceum.ml/dev/examples/NPG/index.html"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">Lyceum</span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../humanoid/">Creating a MuJoCo Environment</a></li><li class="is-active"><a class="tocitem" href>Learning a Control Policy</a><ul class="internal"><li><a class="tocitem" href="#Overview-1"><span>Overview</span></a></li><li><a class="tocitem" href="#The-Code-1"><span>The Code</span></a></li></ul></li><li><a class="tocitem" href="../visualize/">Using the Visualizer</a></li></ul></li><li><span class="tocitem">LyceumBase</span><ul><li><a class="tocitem" href="../../lyceumbase/abstractenvironment/">AbstractEnvironment</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Learning a Control Policy</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Learning a Control Policy</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/Lyceum/LyceumDocs.jl/blob/master/docs/src/examples/NPG.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><div class="admonition is-info"><header class="admonition-header">Running examples locally</header><div class="admonition-body"><p>This example and more are also available as Julia scripts and Jupyter notebooks.</p><p>See <a href="https://github.com/Lyceum/LyceumDocs.jl/blob/master/example_howto.md">the how-to page</a> for more information.</p></div></div><h1 id="Learning-a-Control-Policy-1"><a class="docs-heading-anchor" href="#Learning-a-Control-Policy-1">Learning a Control Policy</a><a class="docs-heading-anchor-permalink" href="#Learning-a-Control-Policy-1" title="Permalink"></a></h1><h2 id="Overview-1"><a class="docs-heading-anchor" href="#Overview-1">Overview</a><a class="docs-heading-anchor-permalink" href="#Overview-1" title="Permalink"></a></h2><p>In this example we walk through the process of setting up an experiment that runs <a href="https://papers.nips.cc/paper/2073-a-natural-policy-gradient.pdf">Natural Policy Gradient</a> (or more recently <a href="https://arxiv.org/pdf/1703.02660.pdf">in this work</a>). This is an on-policy reinforcement learning method that is comparable to TRPO, PPO, and other policy gradient methods. See the documentation for <code>NaturalPolicyGradient</code> for full implementation details.</p><h2 id="The-Code-1"><a class="docs-heading-anchor" href="#The-Code-1">The Code</a><a class="docs-heading-anchor-permalink" href="#The-Code-1" title="Permalink"></a></h2><p>First, let&#39;s go head and grab all the dependencies:</p><pre><code class="language-julia">using LinearAlgebra, Random, Statistics # From Stdlib
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Learning a Control Policy · Lyceum</title><link rel="canonical" href="https://docs.lyceum.ml/dev/examples/NPG/index.html"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">Lyceum</span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../humanoid/">Creating a MuJoCo Environment</a></li><li class="is-active"><a class="tocitem" href>Learning a Control Policy</a><ul class="internal"><li><a class="tocitem" href="#Overview-1"><span>Overview</span></a></li><li><a class="tocitem" href="#The-Code-1"><span>The Code</span></a></li></ul></li><li><a class="tocitem" href="../visualize/">Using the Visualizer</a></li></ul></li><li><span class="tocitem">LyceumBase</span><ul><li><a class="tocitem" href="../../lyceumbase/abstractenvironment/">AbstractEnvironment</a></li></ul></li><li><span class="tocitem">LyceumAI</span><ul><li><input class="collapse-toggle" id="menuitem-5-1" type="checkbox"/><label class="tocitem" for="menuitem-5-1"><span class="docs-label">Algorithms</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../lyceumai/algorithms/naturalpolicygradient/">Natural Policy Gradient</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-5-2" type="checkbox"/><label class="tocitem" for="menuitem-5-2"><span class="docs-label">Models</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../lyceumai/models/policies/">Policies</a></li></ul></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Learning a Control Policy</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Learning a Control Policy</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/Lyceum/LyceumDocs.jl/blob/master/docs/src/examples/NPG.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><div class="admonition is-info"><header class="admonition-header">Running examples locally</header><div class="admonition-body"><p>This example and more are also available as Julia scripts and Jupyter notebooks.</p><p>See <a href="https://github.com/Lyceum/LyceumDocs.jl/blob/master/example_howto.md">the how-to page</a> for more information.</p></div></div><h1 id="Learning-a-Control-Policy-1"><a class="docs-heading-anchor" href="#Learning-a-Control-Policy-1">Learning a Control Policy</a><a class="docs-heading-anchor-permalink" href="#Learning-a-Control-Policy-1" title="Permalink"></a></h1><h2 id="Overview-1"><a class="docs-heading-anchor" href="#Overview-1">Overview</a><a class="docs-heading-anchor-permalink" href="#Overview-1" title="Permalink"></a></h2><p>In this example we walk through the process of setting up an experiment that runs <a href="https://papers.nips.cc/paper/2073-a-natural-policy-gradient.pdf">Natural Policy Gradient</a> (or more recently <a href="https://arxiv.org/pdf/1703.02660.pdf">in this work</a>). This is an on-policy reinforcement learning method that is comparable to TRPO, PPO, and other policy gradient methods. See the documentation for <code>NaturalPolicyGradient</code> for full implementation details.</p><h2 id="The-Code-1"><a class="docs-heading-anchor" href="#The-Code-1">The Code</a><a class="docs-heading-anchor-permalink" href="#The-Code-1" title="Permalink"></a></h2><p>First, let&#39;s go head and grab all the dependencies:</p><pre><code class="language-julia">using LinearAlgebra, Random, Statistics # From Stdlib
 using LyceumAI                          # For the NPG controller
 using LyceumMuJoCo                      # For the Hopper environment
 using LyceumBase.Tools                  # For the ControllerIterator discussed below
@@ -7,7 +7,7 @@ using Flux                              # For our neural networks needs
 using UniversalLogger                   # For logging experiment data
 using Plots                             # For plotting the results</code></pre><p>We first instantiate a <code>HopperV2</code> environment to grab useful environment-specific values, such as the size of the observation and action vectors:</p><pre><code class="language-julia">env = LyceumMuJoCo.HopperV2();
 dobs, dact = length(obsspace(env)), length(actionspace(env));</code></pre><p>We&#39;ll also seed the per-thread global RNGs:</p><pre><code class="language-julia">seed_threadrngs!(1)</code></pre><pre><code class="language-none">1-element Array{Random.MersenneTwister,1}:
- Random.MersenneTwister(UInt32[0x00000001], Random.DSFMT.DSFMT_state(Int32[1749029653, 1072851681, 1610647787, 1072862326, 1841712345, 1073426746, -198061126, 1073322060, -156153802, 1073567984  …  1977574422, 1073209915, 278919868, 1072835605, 1290372147, 18858467, 1815133874, -1716870370, 382, 0]), [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0  …  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], UInt128[0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000  …  0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000], 1002, 0)</code></pre><h3 id="Policy-Gradient-Components-1"><a class="docs-heading-anchor" href="#Policy-Gradient-Components-1">Policy Gradient Components</a><a class="docs-heading-anchor-permalink" href="#Policy-Gradient-Components-1" title="Permalink"></a></h3><p>Policy Gradient methods require a policy: a function that takes in the state/observations of the agent, and outputs an action i.e. <code>action = π(obs)</code>. In much of Deep RL, the policy takes the form of a neural network which can be built on top of the <a href="https://github.com/FluxML/Flux.jl">Flux.jl</a> library. We utilize a stochastic policy in this example. Specifically, our policy is represented as a multivariate Gaussian distribution of the form:</p><div>\[\pi(a | s) = \mathcal{N}(\mu_{\theta_1}(\text{obs}), \Sigma_{\theta_2})\]</div><p>where <span>$\mu_{\theta_1}$</span> is a neural network, parameterized by <span>$\theta_1$</span>, that maps an observation <code>obs</code> to a mean action and <span>$\Sigma_{\theta_2}$</span> is a diagonal covariance matrix parameterized by <span>$\theta_2$</span>, the diagonal entries of the matrix. For <span>$\mu_{\theta_1}$</span> we utilize a 2-layer neural network, where each layer has a &quot;width&quot; of 32. We use tanh activations for each hidden layer and initialize the network weights with Glorot Uniform initializations. Rather than tracking <span>$\Sigma_{\theta_2}$</span> directly, we track the log standard deviations, which are easier to learn. We initialize <span>$\log \text{diag}(\Sigma_{\theta_2})$</span> as <code>zeros(dact)</code>, i.e. a <code>Vector</code> of length <code>dact</code>, initialized to 0. Both <span>$\theta_1$</span> and <span>$\theta_2$</span> are learned in this example. Note that <span>$\mu_{\theta_1}$</span> is a <em>state-dependent</em> mean while <span>$\Sigma_{\theta_2}$</span> is a <em>global</em> covariance.</p><pre><code class="language-julia">const policy = DiagGaussianPolicy(
+ Random.MersenneTwister(UInt32[0x00000001], Random.DSFMT.DSFMT_state(Int32[1749029653, 1072851681, 1610647787, 1072862326, 1841712345, 1073426746, -198061126, 1073322060, -156153802, 1073567984  …  1977574422, 1073209915, 278919868, 1072835605, 1290372147, 18858467, 1815133874, -1716870370, 382, 0]), [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0  …  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], UInt128[0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000  …  0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000, 0x00000000000000000000000000000000], 1002, 0)</code></pre><h3 id="Policy-Gradient-Components-1"><a class="docs-heading-anchor" href="#Policy-Gradient-Components-1">Policy Gradient Components</a><a class="docs-heading-anchor-permalink" href="#Policy-Gradient-Components-1" title="Permalink"></a></h3><p>Policy Gradient methods require a policy: a function that takes in the state/observations of the agent, and outputs an action i.e. <code>action = π(obs)</code>. In much of Deep RL, the policy takes the form of a neural network which can be built on top of the <a href="https://github.com/FluxML/Flux.jl">Flux.jl</a> library. We utilize a stochastic policy in this example. Specifically, our policy is represented as a multivariate Gaussian distribution of the form:</p><div>\[\pi(a | o) \sim \mathcal{N}(\mu_{\theta_1}(o), \Sigma_{\theta_2})\]</div><p>where <span>$\mu_{\theta_1}$</span> is a neural network, parameterized by <span>$\theta_1$</span>, that maps an observation to a mean action and <span>$\Sigma_{\theta_2}$</span> is a diagonal covariance matrix parameterized by <span>$\theta_2$</span>, the diagonal entries of the matrix. For <span>$\mu_{\theta_1}$</span> we utilize a 2-layer neural network, where each layer has a &quot;width&quot; of 32. We use tanh activations for each hidden layer and initialize the network weights with Glorot Uniform initializations. Rather than tracking <span>$\Sigma_{\theta_2}$</span> directly, we track the log standard deviations, which are easier to learn. We initialize <span>$\log \text{diag}(\Sigma_{\theta_2})$</span> as <code>zeros(dact)</code>, i.e. a <code>Vector</code> of length <code>dact</code>, initialized to 0. Both <span>$\theta_1$</span> and <span>$\theta_2$</span> are learned in this example. Note that <span>$\mu_{\theta_1}$</span> is a <em>state-dependent</em> mean while <span>$\Sigma_{\theta_2}$</span> is a <em>global</em> covariance.</p><pre><code class="language-julia">const policy = DiagGaussianPolicy(
     multilayer_perceptron(
         dobs,
         32,
@@ -104,117 +104,117 @@ exper, lg = hopper_NPG(npg, false);</code></pre><p>Let&#39;s go ahead and plot t
 )</code></pre><?xml version="1.0" encoding="utf-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="600" height="400" viewBox="0 0 2400 1600">
 <defs>
-  <clipPath id="clip0400">
+  <clipPath id="clip2000">
     <rect x="0" y="0" width="2400" height="1600"/>
   </clipPath>
 </defs>
-<path clip-path="url(#clip0400)" d="
+<path clip-path="url(#clip2000)" d="
 M0 1600 L2400 1600 L2400 0 L0 0  Z
   " fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
 <defs>
-  <clipPath id="clip0401">
+  <clipPath id="clip2001">
     <rect x="480" y="0" width="1681" height="1600"/>
   </clipPath>
 </defs>
-<path clip-path="url(#clip0400)" d="
+<path clip-path="url(#clip2000)" d="
 M86.9921 1521.01 L2352.76 1521.01 L2352.76 62.9921 L86.9921 62.9921  Z
   " fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
 <defs>
-  <clipPath id="clip0402">
+  <clipPath id="clip2002">
     <rect x="86" y="62" width="2267" height="1459"/>
   </clipPath>
 </defs>
-<polyline clip-path="url(#clip0402)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip2002)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   140.376,1521.01 140.376,62.9921 
   "/>
-<polyline clip-path="url(#clip0402)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip2002)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   677.44,1521.01 677.44,62.9921 
   "/>
-<polyline clip-path="url(#clip0402)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip2002)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   1214.5,1521.01 1214.5,62.9921 
   "/>
-<polyline clip-path="url(#clip0402)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip2002)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   1751.57,1521.01 1751.57,62.9921 
   "/>
-<polyline clip-path="url(#clip0402)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip2002)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   2288.63,1521.01 2288.63,62.9921 
   "/>
-<polyline clip-path="url(#clip0402)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip2002)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   86.9921,1505.41 2352.76,1505.41 
   "/>
-<polyline clip-path="url(#clip0402)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip2002)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   86.9921,1028.34 2352.76,1028.34 
   "/>
-<polyline clip-path="url(#clip0402)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip2002)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   86.9921,551.273 2352.76,551.273 
   "/>
-<polyline clip-path="url(#clip0402)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip2002)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   86.9921,74.2023 2352.76,74.2023 
   "/>
-<polyline clip-path="url(#clip0400)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   86.9921,1521.01 2352.76,1521.01 
   "/>
-<polyline clip-path="url(#clip0400)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   86.9921,1521.01 86.9921,62.9921 
   "/>
-<polyline clip-path="url(#clip0400)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   140.376,1521.01 140.376,1503.51 
   "/>
-<polyline clip-path="url(#clip0400)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   677.44,1521.01 677.44,1503.51 
   "/>
-<polyline clip-path="url(#clip0400)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   1214.5,1521.01 1214.5,1503.51 
   "/>
-<polyline clip-path="url(#clip0400)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   1751.57,1521.01 1751.57,1503.51 
   "/>
-<polyline clip-path="url(#clip0400)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   2288.63,1521.01 2288.63,1503.51 
   "/>
-<polyline clip-path="url(#clip0400)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   86.9921,1505.41 114.181,1505.41 
   "/>
-<polyline clip-path="url(#clip0400)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   86.9921,1028.34 114.181,1028.34 
   "/>
-<polyline clip-path="url(#clip0400)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   86.9921,551.273 114.181,551.273 
   "/>
-<polyline clip-path="url(#clip0400)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   86.9921,74.2023 114.181,74.2023 
   "/>
-<g clip-path="url(#clip0400)">
+<g clip-path="url(#clip2000)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 140.376, 1575.01)" x="140.376" y="1575.01">0</text>
 </g>
-<g clip-path="url(#clip0400)">
+<g clip-path="url(#clip2000)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 677.44, 1575.01)" x="677.44" y="1575.01">50</text>
 </g>
-<g clip-path="url(#clip0400)">
+<g clip-path="url(#clip2000)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 1214.5, 1575.01)" x="1214.5" y="1575.01">100</text>
 </g>
-<g clip-path="url(#clip0400)">
+<g clip-path="url(#clip2000)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 1751.57, 1575.01)" x="1751.57" y="1575.01">150</text>
 </g>
-<g clip-path="url(#clip0400)">
+<g clip-path="url(#clip2000)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 2288.63, 1575.01)" x="2288.63" y="1575.01">200</text>
 </g>
-<g clip-path="url(#clip0400)">
+<g clip-path="url(#clip2000)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 1522.91)" x="62.9921" y="1522.91">0</text>
 </g>
-<g clip-path="url(#clip0400)">
+<g clip-path="url(#clip2000)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 1045.84)" x="62.9921" y="1045.84">1000</text>
 </g>
-<g clip-path="url(#clip0400)">
+<g clip-path="url(#clip2000)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 568.773)" x="62.9921" y="568.773">2000</text>
 </g>
-<g clip-path="url(#clip0400)">
+<g clip-path="url(#clip2000)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 91.7023)" x="62.9921" y="91.7023">3000</text>
 </g>
-<g clip-path="url(#clip0400)">
+<g clip-path="url(#clip2000)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:84px; text-anchor:middle;" transform="rotate(0, 1219.87, 73.2)" x="1219.87" y="73.2">HopperV2 Reward</text>
 </g>
-<polyline clip-path="url(#clip0402)" style="stroke:#009af9; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2002)" style="stroke:#009af9; stroke-width:4; stroke-opacity:1; fill:none" points="
   151.118,1479.74 161.859,1476.78 172.6,1473.22 183.341,1470.16 194.083,1447.77 204.824,1447.01 215.565,1445.05 226.306,1416.93 237.048,1413.3 247.789,1413.75 
   258.53,1413.25 269.272,1406.56 280.013,1399.38 290.754,1401.26 301.495,1404.29 312.237,1403.89 322.978,1337.62 333.719,1307.52 344.46,1335.61 355.202,1371.04 
   365.943,1359.77 376.684,1221.8 387.425,1328.32 398.167,1210.36 408.908,1294.54 419.649,1281.36 430.391,1231.48 441.132,1180.4 451.873,1170.55 462.614,972.071 
@@ -237,7 +237,7 @@ M86.9921 1521.01 L2352.76 1521.01 L2352.76 62.9921 L86.9921 62.9921  Z
   2191.96,165.254 2202.7,135.749 2213.44,239.296 2224.18,141.894 2234.92,239.395 2245.67,173.259 2256.41,175.659 2267.15,155.72 2277.89,104.257 2288.63,255.18 
   
   "/>
-<polyline clip-path="url(#clip0402)" style="stroke:#e26f46; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2002)" style="stroke:#e26f46; stroke-width:4; stroke-opacity:1; fill:none" points="
   151.118,1478.57 161.859,1477.13 172.6,1474.35 183.341,1465.11 194.083,1460.73 204.824,1453.2 215.565,1451.76 226.306,1440.52 237.048,1430.28 247.789,1423.83 
   258.53,1424.31 269.272,1416.91 280.013,1415.7 290.754,1408.07 301.495,1408.64 312.237,1399.38 322.978,1388.66 333.719,1386.39 344.46,1368.23 355.202,1369.2 
   365.943,1359.79 376.684,1337.32 387.425,1336.2 398.167,1312.29 408.908,1297.81 419.649,1309.64 430.391,1268.69 441.132,1218.08 451.873,1248.85 462.614,1221.74 
@@ -260,22 +260,22 @@ M86.9921 1521.01 L2352.76 1521.01 L2352.76 62.9921 L86.9921 62.9921  Z
   2191.96,393.447 2202.7,388.629 2213.44,467.89 2224.18,545.897 2234.92,355.378 2245.67,421.021 2256.41,291.08 2267.15,308.584 2277.89,384.695 2288.63,531.622 
   
   "/>
-<path clip-path="url(#clip0400)" d="
+<path clip-path="url(#clip2000)" d="
 M1676.96 1377.01 L2280.76 1377.01 L2280.76 1195.57 L1676.96 1195.57  Z
   " fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
-<polyline clip-path="url(#clip0400)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   1676.96,1377.01 2280.76,1377.01 2280.76,1195.57 1676.96,1195.57 1676.96,1377.01 
   "/>
-<polyline clip-path="url(#clip0400)" style="stroke:#009af9; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2000)" style="stroke:#009af9; stroke-width:4; stroke-opacity:1; fill:none" points="
   1700.96,1256.05 1844.96,1256.05 
   "/>
-<g clip-path="url(#clip0400)">
+<g clip-path="url(#clip2000)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:start;" transform="rotate(0, 1868.96, 1273.55)" x="1868.96" y="1273.55">Mean Policy</text>
 </g>
-<polyline clip-path="url(#clip0400)" style="stroke:#e26f46; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2000)" style="stroke:#e26f46; stroke-width:4; stroke-opacity:1; fill:none" points="
   1700.96,1316.53 1844.96,1316.53 
   "/>
-<g clip-path="url(#clip0400)">
+<g clip-path="url(#clip2000)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:start;" transform="rotate(0, 1868.96, 1334.03)" x="1868.96" y="1334.03">Stochastic Policy</text>
 </g>
 </svg>
@@ -287,144 +287,144 @@ M1676.96 1377.01 L2280.76 1377.01 L2280.76 1195.57 L1676.96 1195.57  Z
 )</code></pre><?xml version="1.0" encoding="utf-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="600" height="400" viewBox="0 0 2400 1600">
 <defs>
-  <clipPath id="clip1000">
+  <clipPath id="clip2600">
     <rect x="0" y="0" width="2400" height="1600"/>
   </clipPath>
 </defs>
-<path clip-path="url(#clip1000)" d="
+<path clip-path="url(#clip2600)" d="
 M0 1600 L2400 1600 L2400 0 L0 0  Z
   " fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
 <defs>
-  <clipPath id="clip1001">
+  <clipPath id="clip2601">
     <rect x="480" y="0" width="1681" height="1600"/>
   </clipPath>
 </defs>
-<path clip-path="url(#clip1000)" d="
+<path clip-path="url(#clip2600)" d="
 M86.9921 1521.01 L2352.76 1521.01 L2352.76 62.9921 L86.9921 62.9921  Z
   " fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
 <defs>
-  <clipPath id="clip1002">
+  <clipPath id="clip2602">
     <rect x="86" y="62" width="2267" height="1459"/>
   </clipPath>
 </defs>
-<polyline clip-path="url(#clip1002)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip2602)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   140.376,1521.01 140.376,62.9921 
   "/>
-<polyline clip-path="url(#clip1002)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip2602)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   677.44,1521.01 677.44,62.9921 
   "/>
-<polyline clip-path="url(#clip1002)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip2602)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   1214.5,1521.01 1214.5,62.9921 
   "/>
-<polyline clip-path="url(#clip1002)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip2602)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   1751.57,1521.01 1751.57,62.9921 
   "/>
-<polyline clip-path="url(#clip1002)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip2602)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   2288.63,1521.01 2288.63,62.9921 
   "/>
-<polyline clip-path="url(#clip1002)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip2602)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   86.9921,1480.18 2352.76,1480.18 
   "/>
-<polyline clip-path="url(#clip1002)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip2602)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   86.9921,1274.62 2352.76,1274.62 
   "/>
-<polyline clip-path="url(#clip1002)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip2602)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   86.9921,1069.05 2352.76,1069.05 
   "/>
-<polyline clip-path="url(#clip1002)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip2602)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   86.9921,863.491 2352.76,863.491 
   "/>
-<polyline clip-path="url(#clip1002)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip2602)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   86.9921,657.927 2352.76,657.927 
   "/>
-<polyline clip-path="url(#clip1002)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip2602)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   86.9921,452.363 2352.76,452.363 
   "/>
-<polyline clip-path="url(#clip1002)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
+<polyline clip-path="url(#clip2602)" style="stroke:#000000; stroke-width:2; stroke-opacity:0.1; fill:none" points="
   86.9921,246.799 2352.76,246.799 
   "/>
-<polyline clip-path="url(#clip1000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   86.9921,1521.01 2352.76,1521.01 
   "/>
-<polyline clip-path="url(#clip1000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   86.9921,1521.01 86.9921,62.9921 
   "/>
-<polyline clip-path="url(#clip1000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   140.376,1521.01 140.376,1503.51 
   "/>
-<polyline clip-path="url(#clip1000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   677.44,1521.01 677.44,1503.51 
   "/>
-<polyline clip-path="url(#clip1000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   1214.5,1521.01 1214.5,1503.51 
   "/>
-<polyline clip-path="url(#clip1000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   1751.57,1521.01 1751.57,1503.51 
   "/>
-<polyline clip-path="url(#clip1000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   2288.63,1521.01 2288.63,1503.51 
   "/>
-<polyline clip-path="url(#clip1000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   86.9921,1480.18 114.181,1480.18 
   "/>
-<polyline clip-path="url(#clip1000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   86.9921,1274.62 114.181,1274.62 
   "/>
-<polyline clip-path="url(#clip1000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   86.9921,1069.05 114.181,1069.05 
   "/>
-<polyline clip-path="url(#clip1000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   86.9921,863.491 114.181,863.491 
   "/>
-<polyline clip-path="url(#clip1000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   86.9921,657.927 114.181,657.927 
   "/>
-<polyline clip-path="url(#clip1000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   86.9921,452.363 114.181,452.363 
   "/>
-<polyline clip-path="url(#clip1000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   86.9921,246.799 114.181,246.799 
   "/>
-<g clip-path="url(#clip1000)">
+<g clip-path="url(#clip2600)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 140.376, 1575.01)" x="140.376" y="1575.01">0</text>
 </g>
-<g clip-path="url(#clip1000)">
+<g clip-path="url(#clip2600)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 677.44, 1575.01)" x="677.44" y="1575.01">50</text>
 </g>
-<g clip-path="url(#clip1000)">
+<g clip-path="url(#clip2600)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 1214.5, 1575.01)" x="1214.5" y="1575.01">100</text>
 </g>
-<g clip-path="url(#clip1000)">
+<g clip-path="url(#clip2600)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 1751.57, 1575.01)" x="1751.57" y="1575.01">150</text>
 </g>
-<g clip-path="url(#clip1000)">
+<g clip-path="url(#clip2600)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 2288.63, 1575.01)" x="2288.63" y="1575.01">200</text>
 </g>
-<g clip-path="url(#clip1000)">
+<g clip-path="url(#clip2600)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 1497.68)" x="62.9921" y="1497.68">0</text>
 </g>
-<g clip-path="url(#clip1000)">
+<g clip-path="url(#clip2600)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 1292.12)" x="62.9921" y="1292.12">1000</text>
 </g>
-<g clip-path="url(#clip1000)">
+<g clip-path="url(#clip2600)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 1086.55)" x="62.9921" y="1086.55">2000</text>
 </g>
-<g clip-path="url(#clip1000)">
+<g clip-path="url(#clip2600)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 880.991)" x="62.9921" y="880.991">3000</text>
 </g>
-<g clip-path="url(#clip1000)">
+<g clip-path="url(#clip2600)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 675.427)" x="62.9921" y="675.427">4000</text>
 </g>
-<g clip-path="url(#clip1000)">
+<g clip-path="url(#clip2600)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 469.863)" x="62.9921" y="469.863">5000</text>
 </g>
-<g clip-path="url(#clip1000)">
+<g clip-path="url(#clip2600)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:end;" transform="rotate(0, 62.9921, 264.299)" x="62.9921" y="264.299">6000</text>
 </g>
-<g clip-path="url(#clip1000)">
+<g clip-path="url(#clip2600)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:84px; text-anchor:middle;" transform="rotate(0, 1219.87, 73.2)" x="1219.87" y="73.2">HopperV2 Eval</text>
 </g>
-<polyline clip-path="url(#clip1002)" style="stroke:#009af9; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2602)" style="stroke:#009af9; stroke-width:4; stroke-opacity:1; fill:none" points="
   151.118,1479.74 161.859,1479.62 172.6,1479.46 183.341,1479.32 194.083,1478 204.824,1477.98 215.565,1477.96 226.306,1475.39 237.048,1474.89 247.789,1475.02 
   258.53,1474.97 269.272,1473.27 280.013,1471.86 290.754,1472.21 301.495,1472.79 312.237,1473.11 322.978,1460.11 333.719,1455.3 344.46,1460.51 355.202,1466.26 
   365.943,1464.24 376.684,1428.2 387.425,1455.6 398.167,1423.41 408.908,1450.18 419.649,1445.27 430.391,1430.59 441.132,1412.51 451.873,1409.07 462.614,1304.3 
@@ -447,7 +447,7 @@ M86.9921 1521.01 L2352.76 1521.01 L2352.76 62.9921 L86.9921 62.9921  Z
   2191.96,164.668 2202.7,163.87 2213.44,322.471 2224.18,196.36 2234.92,367.476 2245.67,145.832 2256.41,136.911 2267.15,113.499 2277.89,134.803 2288.63,218.707 
   
   "/>
-<polyline clip-path="url(#clip1002)" style="stroke:#e26f46; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2602)" style="stroke:#e26f46; stroke-width:4; stroke-opacity:1; fill:none" points="
   151.118,1479.66 161.859,1479.55 172.6,1479.44 183.341,1479.03 194.083,1478.71 204.824,1478.12 215.565,1477.85 226.306,1477.03 237.048,1476.13 247.789,1475.63 
   258.53,1475.57 269.272,1474.8 280.013,1474.54 290.754,1473.65 301.495,1473.7 312.237,1472.18 322.978,1469.59 333.719,1469.54 344.46,1465.8 355.202,1465.75 
   365.943,1463.9 376.684,1459.06 387.425,1457.95 398.167,1452.84 408.908,1449.34 419.649,1451.85 430.391,1440.59 441.132,1422.59 451.873,1432.01 462.614,1424.43 
@@ -470,24 +470,24 @@ M86.9921 1521.01 L2352.76 1521.01 L2352.76 62.9921 L86.9921 62.9921  Z
   2191.96,525.452 2202.7,515.688 2213.44,589.81 2224.18,713.126 2234.92,454.344 2245.67,522.136 2256.41,324.135 2267.15,340.855 2277.89,429.234 2288.63,609.02 
   
   "/>
-<path clip-path="url(#clip1000)" d="
+<path clip-path="url(#clip2600)" d="
 M1676.96 1377.01 L2280.76 1377.01 L2280.76 1195.57 L1676.96 1195.57  Z
   " fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
-<polyline clip-path="url(#clip1000)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2600)" style="stroke:#000000; stroke-width:4; stroke-opacity:1; fill:none" points="
   1676.96,1377.01 2280.76,1377.01 2280.76,1195.57 1676.96,1195.57 1676.96,1377.01 
   "/>
-<polyline clip-path="url(#clip1000)" style="stroke:#009af9; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2600)" style="stroke:#009af9; stroke-width:4; stroke-opacity:1; fill:none" points="
   1700.96,1256.05 1844.96,1256.05 
   "/>
-<g clip-path="url(#clip1000)">
+<g clip-path="url(#clip2600)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:start;" transform="rotate(0, 1868.96, 1273.55)" x="1868.96" y="1273.55">Mean Policy</text>
 </g>
-<polyline clip-path="url(#clip1000)" style="stroke:#e26f46; stroke-width:4; stroke-opacity:1; fill:none" points="
+<polyline clip-path="url(#clip2600)" style="stroke:#e26f46; stroke-width:4; stroke-opacity:1; fill:none" points="
   1700.96,1316.53 1844.96,1316.53 
   "/>
-<g clip-path="url(#clip1000)">
+<g clip-path="url(#clip2600)">
 <text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:start;" transform="rotate(0, 1868.96, 1334.03)" x="1868.96" y="1334.03">Stochastic Policy</text>
 </g>
 </svg>
 <p>Finally, we save the logged results to <code>exper</code> for later review:</p><pre><code class="language-julia">exper[:logs] = get(lg)
-finish!(exper); # flushes everything to disk</code></pre><pre><code class="language-none">[ Info: Experiment saved to /tmp/hopper_example.jlso</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../humanoid/">« Creating a MuJoCo Environment</a><a class="docs-footer-nextpage" href="../visualize/">Using the Visualizer »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Tuesday 21 January 2020 00:37">Tuesday 21 January 2020</span>. Using Julia version 1.3.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+finish!(exper); # flushes everything to disk</code></pre><pre><code class="language-none">[ Info: Experiment saved to /tmp/hopper_example.jlso</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../humanoid/">« Creating a MuJoCo Environment</a><a class="docs-footer-nextpage" href="../visualize/">Using the Visualizer »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Wednesday 22 January 2020 00:41">Wednesday 22 January 2020</span>. Using Julia version 1.3.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
