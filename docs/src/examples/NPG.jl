@@ -18,10 +18,10 @@
 using LinearAlgebra, Random, Statistics # From Stdlib
 using LyceumAI                          # For the NPG controller
 using LyceumMuJoCo                      # For the Hopper environment
-using LyceumBase.Tools                  # For the ControllerIterator discussed below
 using Flux                              # For our neural networks needs
 using UniversalLogger                   # For logging experiment data
 using Plots                             # For plotting the results
+using LyceumBase.Tools                  # Miscellaneous utilities
 
 # We first instantiate a `HopperV2` environment to grab useful
 # environment-specific values, such as the size of the observation and action vectors:

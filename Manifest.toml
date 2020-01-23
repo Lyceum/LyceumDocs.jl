@@ -43,9 +43,9 @@ version = "0.2.0"
 
 [[AxisArrays]]
 deps = ["Dates", "IntervalSets", "IterTools", "RangeArrays"]
-git-tree-sha1 = "4781a1dc368d9f1630281ed4a4240a0f34a420de"
+git-tree-sha1 = "d27a38eb4312c8c42ac144d10e17e4ce7fb27c55"
 uuid = "39de3d68-74b9-583c-8d2d-e117c070f3a9"
-version = "0.4.0"
+version = "0.4.1"
 
 [[BSON]]
 git-tree-sha1 = "e794bd8f3f319218e8c8b46657631bdbea2807ca"
@@ -517,10 +517,8 @@ uuid = "f25b5985-59c0-418b-a573-42c079f3f644"
 version = "0.1.0"
 
 [[LyceumAI]]
-deps = ["Base64", "Distances", "EllipsisNotation", "FastClosures", "Flux", "Future", "IterativeSolvers", "LearnBase", "LinearAlgebra", "LyceumBase", "LyceumMuJoCo", "MLDataPattern", "MacroTools", "MuJoCo", "MuJoCo_jll", "Parameters", "Random", "Shapes", "StaticArrays", "Statistics", "UniversalLogger", "UnsafeArrays", "Zygote"]
-git-tree-sha1 = "42915dfe54188ef23a81b09acb12ab7a7196851b"
-repo-rev = "master"
-repo-url = "https://github.com/Lyceum/LyceumAI.jl.git"
+deps = ["Base64", "Distances", "DocStringExtensions", "EllipsisNotation", "FastClosures", "Flux", "Future", "IterativeSolvers", "LearnBase", "LinearAlgebra", "LyceumBase", "LyceumMuJoCo", "MLDataPattern", "MacroTools", "MuJoCo", "MuJoCo_jll", "Parameters", "Random", "Shapes", "StaticArrays", "Statistics", "UniversalLogger", "UnsafeArrays", "Zygote"]
+path = "/home/colinxs/workspace/juliadev/LyceumAI"
 uuid = "6917c76a-ac01-4302-a33e-8c456ab70f71"
 version = "0.1.0"
 
