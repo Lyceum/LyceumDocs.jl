@@ -20,6 +20,19 @@ jobs:
         with:
           version: ${{ matrix.julia-version }}
           arch: ${{ matrix.julia-arch }}
+    steps:
+      - name:  Setup virtual display
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt update
+          sudo apt install xorg-dev xvfb
+          sudo Xvfb :99 -screen 0 1024x768x24 &
+        shell: bash
+      - uses: actions/checkout@v1.0.0
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ matrix.julia-version }}
+          arch: ${{ matrix.julia-arch }}
       - name: Add registry
         run: |
           julia --color=yes --project -e 'using Pkg; Registry.add(RegistrySpec(url = "https://github.com/Lyceum/LyceumRegistry.git"))'
@@ -31,4 +44,5 @@ jobs:
           MUJOCO_KEY: ${{ secrets.MUJOCO_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # For authentication with GitHub Actions token
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
+          DISPLAY: ':99'
         run: julia --project -e 'using LyceumDocs; LyceumDocs.make()'
