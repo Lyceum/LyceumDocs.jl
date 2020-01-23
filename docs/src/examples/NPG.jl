@@ -41,7 +41,7 @@ seed_threadrngs!(1)
 # this example. Specifically, our policy is represented as a multivariate Gaussian
 # distribution of the form:
 # ```math
-# \pi(a | o) \sim \mathcal{N}(\mu_{\theta_1}(o), \Sigma_{\theta_2})
+# \pi(a | o) = \mathcal{N}(\mu_{\theta_1}(o), \Sigma_{\theta_2})
 # ```
 # where ``\mu_{\theta_1}`` is a neural network, parameterized by ``\theta_1``, that maps
 # an observation to a mean action and ``\Sigma_{\theta_2}`` is a diagonal
