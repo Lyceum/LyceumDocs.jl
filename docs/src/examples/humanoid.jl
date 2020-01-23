@@ -168,9 +168,8 @@ end
 # `LyceumAI`, `MPPI` accepts a "thread-aware" environment constructor as well as any
 # algorithm parameters. In this case, we just pass a closure around the `tconstruct`
 # function we defined above. `MPPI`, being a single-step algorithm, is itself not iterable,
-# so we wrap it in a `ControllerIterator` which simply calls
-# `getaction!(action, state, obs, mppi::MPPI)` for `T` timesteps, while simultaneously
-# plotting and logging the trajectory rollout.
+# so we wrap it in a `ControllerIterator` which simply calls the passed-in function
+# `ctrlfn` for `T` timesteps, while simultaneously plotting and logging the trajectory rollout.
 function humanoid_MPPI(etype = Humanoid; T = 200, H = 64, K = 64)
     env = etype()
 
@@ -178,14 +177,15 @@ function humanoid_MPPI(etype = Humanoid; T = 200, H = 64, K = 64)
     ## similar tasks, but are not invariant to the model.
     mppi = MPPI(
         env_tconstructor = n -> tconstruct(etype, n),
-        covar0 = Diagonal(0.05^2 * I, size(actionspace(env), 1)),
+        covar = Diagonal(0.05^2 * I, size(actionspace(env), 1)),
         lambda = 0.4,
         H = H,
         K = K,
         gamma = 1.0,
     )
 
-    iter = ControllerIterator(mppi, env; T = T, plotiter = div(T, 10))
+    ctrlfn = (action, state, obs) -> getaction!(action, state, mppi)
+    iter = ControllerIterator(ctrlfn, env; T = T, plotiter = div(T, 10))
 
     ## We can time the following loop; if it ends up less than the time the
     ## MuJoCo models integrated forward in, then one could conceivably run this
