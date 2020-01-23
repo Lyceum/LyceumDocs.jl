@@ -22,7 +22,7 @@ function process(doc::Document; config = Dict())
     builds = doc.config[:builds]
     paths = map(p -> joinpath(STAGING_DIR, p), PATHS)
 
-    copy_deps(doc)
+    #copy_deps(doc) # TODO not needed with File type
 
     if doc.kind === :documenter && :markdown in builds
         abs_dst = joinpath(STAGING_DIR, doc.rel_path)
