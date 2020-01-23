@@ -26,6 +26,10 @@ struct Document <: Node
     end
 end
 
+struct File <: Node
+    root::String
+    rel_path::String
+end
 
 const BUILDS = (:markdown, :script, :notebook)
 
@@ -56,6 +60,8 @@ function group(root; skipliterate::Bool = false)
             push!(grp.children, document(child, grp))
         elseif endswith(child, ".md")
             push!(grp.children, document(child, grp))
+        else
+            push!(grp.children, file(child, grp))
         end
     end
     grp
@@ -78,6 +84,8 @@ function group(rel_path, parent::Group; skipliterate = false)
                 push!(grp.children, document(child, grp))
             elseif endswith(child, ".md")
                 push!(grp.children, document(child, grp))
+            else
+                push!(grp.children, file(child, grp))
             end
         end
     end
@@ -90,6 +98,9 @@ function document(rel_path, parent::Group)
     Document(parent.root, rel_path, kind, config)
 end
 
+function file(rel_path, parent::Group)
+    File(parent.root, rel_path)
+end
 
 
 function parsefile(path)

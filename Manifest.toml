@@ -533,10 +533,8 @@ uuid = "db31fed1-ca1e-4084-8a49-12fae1996a55"
 version = "0.1.0"
 
 [[LyceumMuJoCo]]
-deps = ["Distances", "Distributions", "LinearAlgebra", "LyceumBase", "MuJoCo", "Random", "Reexport", "Shapes", "StaticArrays", "Statistics", "UnsafeArrays"]
-git-tree-sha1 = "965524ab8c5cd9112e2254ef50ac7c94fa868dce"
-repo-rev = "master"
-repo-url = "https://github.com/Lyceum/LyceumMuJoCo.jl.git"
+deps = ["Distances", "Distributions", "DocStringExtensions", "LinearAlgebra", "LyceumBase", "MuJoCo", "Random", "Reexport", "Shapes", "StaticArrays", "Statistics", "UnsafeArrays"]
+path = "/home/colinxs/workspace/juliadev/LyceumMuJoCo"
 uuid = "48b9757e-04b8-4dbf-b6ed-75c13d9e4026"
 version = "0.1.0"
 

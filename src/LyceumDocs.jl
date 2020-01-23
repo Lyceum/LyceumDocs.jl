@@ -79,10 +79,11 @@ function make(; clean::Bool = false, skipliterate::Bool = false, config = Dict()
     println()
     makedocs(;
         # modules = [Lyceum, Lyceum.LYCEUM_PACKAGES...], # TODO
-        modules = [LyceumBase, LyceumAI],
+        modules = [LyceumBase, LyceumAI, LyceumMuJoCo],
         format = Documenter.HTML(
             canonical = "https://docs.lyceum.ml/dev/",
             prettyurls = !islocalbuild(),
+            assets = ["assets/custom.css"],
         ),
         pages = pages,
         sitename = "Lyceum",

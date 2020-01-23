@@ -48,6 +48,12 @@ function process(doc::Document; config = Dict())
     end
 end
 
+function process(file::File; config = Dict())
+    abs_dst = joinpath(STAGING_DIR, file.rel_path)
+    mkpath(dirname(abs_dst))
+    cp(joinpath(file.root, file.rel_path), abs_dst)
+end
+
 function copy_deps(doc::Document)
     if !isempty(doc.config[:deps])
         for rel_path in doc.config[:deps]
@@ -88,6 +94,8 @@ function _build_pages(doc::Document)
         return nothing
     end
 end
+
+_build_pages(::File) = nothing
 
 
 function indented_println(xs...; indent = 0)
