@@ -1,3 +1,3 @@
 title = "Examples"
-weight = 10
+weight = 5
 active = false

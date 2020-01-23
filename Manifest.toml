@@ -541,8 +541,8 @@ uuid = "48b9757e-04b8-4dbf-b6ed-75c13d9e4026"
 version = "0.1.0"
 
 [[LyceumMuJoCoViz]]
-deps = ["BangBang", "FFMPEG", "GLFW", "LyceumBase", "LyceumMuJoCo", "MuJoCo", "Observables", "Printf", "Shapes", "StaticArrays"]
-git-tree-sha1 = "c7ad3621e191d2ca985c0f7409ca7b5fdb7e3f6c"
+deps = ["BangBang", "DocStringExtensions", "FFMPEG", "GLFW", "LyceumBase", "LyceumMuJoCo", "MuJoCo", "Observables", "Printf", "Shapes", "StaticArrays"]
+git-tree-sha1 = "c9044f179d6ab3ed24a6a5cc62996a834a41e17c"
 repo-rev = "master"
 repo-url = "https://github.com/Lyceum/LyceumMuJoCoViz.jl.git"
 uuid = "409fd311-7925-44f6-a514-6be572b34fdd"

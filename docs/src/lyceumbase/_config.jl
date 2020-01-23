@@ -1,2 +1,2 @@
 title = "LyceumBase"
-weight = 10
+weight = 15

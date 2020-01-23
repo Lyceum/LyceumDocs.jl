@@ -2,6 +2,8 @@ module LyceumDocs
 
 using Lyceum, Pkg, Documenter, Literate, DevTools, Markdown, YAML
 using LyceumBase
+using LyceumMuJoCoViz
+using Shapes
 
 const AbsStr = AbstractString
 const TupleN{T,N} = NTuple{N,T}
@@ -79,7 +81,7 @@ function make(; clean::Bool = false, skipliterate::Bool = false, config = Dict()
     println()
     makedocs(;
         # modules = [Lyceum, Lyceum.LYCEUM_PACKAGES...], # TODO
-        modules = [LyceumBase, LyceumAI, LyceumMuJoCo],
+        modules = [LyceumBase, LyceumAI, LyceumMuJoCo, LyceumMuJoCoViz, Shapes],
         format = Documenter.HTML(
             canonical = "https://docs.lyceum.ml/dev/",
             prettyurls = !islocalbuild(),
