@@ -73,6 +73,8 @@ function make(; clean::Bool = false, skipliterate::Bool = false, config = Dict()
     end
     status || throw(r)
 
+    cp(joinpath(DOCS_DIR, "assets"), joinpath(STAGING_DIR, "assets"))
+
     @info "Generating Docs"
     println()
     makedocs(;
