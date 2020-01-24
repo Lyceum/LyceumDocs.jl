@@ -518,7 +518,7 @@ version = "0.1.0"
 
 [[LyceumAI]]
 deps = ["Base64", "Distances", "DocStringExtensions", "EllipsisNotation", "FastClosures", "Flux", "Future", "IterativeSolvers", "LearnBase", "LinearAlgebra", "LyceumBase", "LyceumMuJoCo", "MLDataPattern", "MacroTools", "MuJoCo", "MuJoCo_jll", "Parameters", "Random", "Shapes", "StaticArrays", "Statistics", "UniversalLogger", "UnsafeArrays", "Zygote"]
-git-tree-sha1 = "584a7f70798d8a5e0a0e68c8d92827c09aa94920"
+git-tree-sha1 = "2e6f3989e3ed6a5a3c3bb0aa4def3216aafe3ea8"
 repo-rev = "master"
 repo-url = "https://github.com/Lyceum/LyceumAI.jl.git"
 uuid = "6917c76a-ac01-4302-a33e-8c456ab70f71"
@@ -534,7 +534,7 @@ version = "0.1.0"
 
 [[LyceumMuJoCo]]
 deps = ["Distances", "Distributions", "DocStringExtensions", "LinearAlgebra", "LyceumBase", "MuJoCo", "Random", "Reexport", "Shapes", "StaticArrays", "Statistics", "UnsafeArrays"]
-git-tree-sha1 = "d76f105592c329cff06144f90117b0414206bf4f"
+git-tree-sha1 = "f9d1de5067cdd8a65200c71db9c3db43510555ba"
 repo-rev = "master"
 repo-url = "https://github.com/Lyceum/LyceumMuJoCo.jl.git"
 uuid = "48b9757e-04b8-4dbf-b6ed-75c13d9e4026"
