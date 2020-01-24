@@ -509,44 +509,34 @@ version = "2.2.1"
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
 [[Lyceum]]
-deps = ["LyceumAI", "LyceumBase", "LyceumMuJoCo", "LyceumMuJoCoViz", "MuJoCo", "Pkg", "Reexport", "Shapes", "UniversalLogger"]
-git-tree-sha1 = "c8e396e41df86531aeea2e4ac73fa0eaddaaa70a"
-repo-rev = "master"
-repo-url = "https://github.com/Lyceum/Lyceum.jl.git"
+deps = ["LyceumAI", "LyceumBase", "LyceumMuJoCo", "MuJoCo", "Pkg", "Reexport", "Shapes", "UniversalLogger"]
+git-tree-sha1 = "1aac6db62930d1407bd8685204d1f6eb4e045389"
 uuid = "f25b5985-59c0-418b-a573-42c079f3f644"
 version = "0.1.0"
 
 [[LyceumAI]]
 deps = ["Base64", "Distances", "DocStringExtensions", "EllipsisNotation", "FastClosures", "Flux", "Future", "IterativeSolvers", "LearnBase", "LinearAlgebra", "LyceumBase", "LyceumMuJoCo", "MLDataPattern", "MacroTools", "MuJoCo", "MuJoCo_jll", "Parameters", "Random", "Shapes", "StaticArrays", "Statistics", "UniversalLogger", "UnsafeArrays", "Zygote"]
-git-tree-sha1 = "2e6f3989e3ed6a5a3c3bb0aa4def3216aafe3ea8"
-repo-rev = "master"
-repo-url = "https://github.com/Lyceum/LyceumAI.jl.git"
+git-tree-sha1 = "d4011028f54dfe0a839ed037eb912c529f14c5b3"
 uuid = "6917c76a-ac01-4302-a33e-8c456ab70f71"
-version = "0.1.0"
+version = "0.2.0"
 
 [[LyceumBase]]
 deps = ["Adapt", "BenchmarkTools", "Dates", "Distributions", "ElasticArrays", "EllipsisNotation", "Future", "InteractiveUtils", "JLSO", "LibGit2", "LinearAlgebra", "Logging", "MacroTools", "Parameters", "Pkg", "Random", "Shapes", "StaticArrays", "Statistics", "Test", "TimeZones", "UnicodePlots", "UniversalLogger", "UnsafeArrays"]
-git-tree-sha1 = "3e52db5572a46fa822e4691247b04031f1d37cca"
-repo-rev = "master"
-repo-url = "https://github.com/Lyceum/LyceumBase.jl.git"
+git-tree-sha1 = "ea8b3a25a239b84263a3c157ad6f87b693493a29"
 uuid = "db31fed1-ca1e-4084-8a49-12fae1996a55"
-version = "0.1.0"
+version = "0.2.0"
 
 [[LyceumMuJoCo]]
 deps = ["Distances", "Distributions", "DocStringExtensions", "LinearAlgebra", "LyceumBase", "MuJoCo", "Random", "Reexport", "Shapes", "StaticArrays", "Statistics", "UnsafeArrays"]
-git-tree-sha1 = "f9d1de5067cdd8a65200c71db9c3db43510555ba"
-repo-rev = "master"
-repo-url = "https://github.com/Lyceum/LyceumMuJoCo.jl.git"
+git-tree-sha1 = "e6c86deee222f7c20309f1caf69a633b1c4cd4c6"
 uuid = "48b9757e-04b8-4dbf-b6ed-75c13d9e4026"
-version = "0.1.0"
+version = "0.2.0"
 
 [[LyceumMuJoCoViz]]
 deps = ["BangBang", "DocStringExtensions", "FFMPEG", "GLFW", "LyceumBase", "LyceumMuJoCo", "MuJoCo", "Observables", "Printf", "Shapes", "StaticArrays"]
-git-tree-sha1 = "c9044f179d6ab3ed24a6a5cc62996a834a41e17c"
-repo-rev = "master"
-repo-url = "https://github.com/Lyceum/LyceumMuJoCoViz.jl.git"
+git-tree-sha1 = "9c19b4c380bd56b8ce1d69f7a91a7ed550c082a6"
 uuid = "409fd311-7925-44f6-a514-6be572b34fdd"
-version = "0.1.0"
+version = "0.2.0"
 
 [[MKL_jll]]
 deps = ["IntelOpenMP_jll", "Libdl", "Pkg"]
@@ -620,11 +610,9 @@ version = "0.7.0"
 
 [[MuJoCo]]
 deps = ["AxisArrays", "BangBang", "Base64", "CEnum", "LinearAlgebra", "MacroTools", "MuJoCo_jll", "Reexport", "StaticArrays", "UnsafeArrays"]
-git-tree-sha1 = "1fba323c489b6435c788182e20ce25824ea4bfb0"
-repo-rev = "master"
-repo-url = "https://github.com/Lyceum/MuJoCo.jl.git"
+git-tree-sha1 = "632b464252c88aa4862a38f56620c1baa5a9ece4"
 uuid = "93189219-7048-461c-94ec-443a161ed927"
-version = "0.1.1"
+version = "0.2.0"
 
 [[MuJoCo_jll]]
 deps = ["GLEW_jll", "GLFW_jll", "Libdl", "Libglvnd_jll", "Pkg"]
@@ -812,11 +800,9 @@ version = "0.6.0"
 
 [[Shapes]]
 deps = ["Adapt", "MacroTools", "Random", "Requires", "StaticArrays", "UnsafeArrays"]
-git-tree-sha1 = "bdf48ae849a305c6ee97c9b52241dd73cd11e4c5"
-repo-rev = "master"
-repo-url = "https://github.com/Lyceum/Shapes.jl.git"
+git-tree-sha1 = "9f21aebaecf8b087484afa3589c896a336d55486"
 uuid = "175de200-b73b-11e9-28b7-9b5b306cec37"
-version = "0.1.0"
+version = "0.2.0"
 
 [[SharedArrays]]
 deps = ["Distributed", "Mmap", "Random", "Serialization"]
@@ -915,9 +901,9 @@ version = "0.3.0"
 
 [[TimeZones]]
 deps = ["Dates", "EzXML", "Mocking", "Printf", "Serialization", "Unicode"]
-git-tree-sha1 = "24a7474411886cede89529f9b848989b783d954e"
+git-tree-sha1 = "649a6ded860273aa6c808b0627bd88b5fb385211"
 uuid = "f269a46b-ccf7-5d73-abea-4c690281aa53"
-version = "0.10.5"
+version = "0.11.0"
 
 [[TimerOutputs]]
 deps = ["Printf"]
@@ -957,11 +943,9 @@ version = "1.1.0"
 
 [[UniversalLogger]]
 deps = ["Logging", "PushVectors"]
-git-tree-sha1 = "16cd7dfbab8c1a583446a496b869c947d84d9adb"
-repo-rev = "master"
-repo-url = "https://github.com/Lyceum/UniversalLogger.jl.git"
+git-tree-sha1 = "ae1a73e7681e27bc37d8d9db21af73d7cf4518fd"
 uuid = "5c5e3362-9445-4819-9f95-51c44c51adeb"
-version = "0.1.0"
+version = "0.2.0"
 
 [[UnsafeArrays]]
 git-tree-sha1 = "1de6ef280110c7ad3c5d2f7a31a360b57a1bde21"

@@ -1,2 +1,2 @@
 title = "LyceumAI"
-weight = 20
+weight = 15

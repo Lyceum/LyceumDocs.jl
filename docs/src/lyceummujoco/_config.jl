@@ -1,2 +1,2 @@
 title = "LyceumMuJoCo"
-weight = 10
+weight = 29
