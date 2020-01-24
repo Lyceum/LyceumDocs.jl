@@ -26,7 +26,6 @@ function preprocess(s::String, doc::Document; config::Dict = Dict())
         # Since we are doing an out-of-source build
         # we need to add correct EditURL for Documenter
         s = add_documenter_editurl(s)
-            s = add_literate_examples_header(s, repo_root, abs_src)
     elseif doc.kind === :literate
         s = parse_literate(s).body
         s = add_literate_title(s, doc.config[:title])
