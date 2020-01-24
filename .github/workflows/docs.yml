@@ -20,7 +20,6 @@ jobs:
         with:
           version: ${{ matrix.julia-version }}
           arch: ${{ matrix.julia-arch }}
-    steps:
       - name:  Setup virtual display
         if: runner.os == 'Linux'
         run: |
