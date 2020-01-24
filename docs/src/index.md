@@ -5,16 +5,13 @@ weight = 0
 
 Welcome to Lyceum, a framework for developing reinforcement learning, trajectory
 optimization, and other algorithms for continuous control problems in Julia. The primary
-goal of Lyceum is to increase research throughput by leverage the performance of Julia and
-its cutting-edge ecosystem to provide a better, faster tool for robotics and control
-researchers.
+goal of Lyceum is to increase research throughput and creativity by leveraging the
+flexible, performant nature of Julia and its cutting-edge ecosystem.
 
 We hope the community can build on these tools to produce more creative (and performant!)
 methods.
 
-
-The Lyceum
-ecosystem is organized into several core packages:
+The Lyceum ecosystem is organized into several core packages:
 
 - [LyceumBase](https://github.com/Lyceum/LyceumBase.jl), a lightweight package consisting of
     common interface definitions and utilities used throughout Lyceum, such as the
@@ -66,7 +63,7 @@ For more information on registrys and packaging, checkout the
 ## Supporting and Citing
 
 The Lyceum ecosystem was developed as a part of academic research. If you found Lyceum
-helpful and would like to support further development, please star the repository as
+helpful and would like to support further development, please star the repository(s) as
 such metrics may help secure further funding in the future. If you use Lyceum as part of your
 research, teaching, or other engagements, we would be grateful if you could cite our work:
 
