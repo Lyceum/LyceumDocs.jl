@@ -29,6 +29,7 @@ function preprocess(s::String, doc::Document; config::Dict = Dict())
     elseif doc.kind === :literate
         s = parse_literate(s).body
         s = add_literate_title(s, doc.config[:title])
+            s = add_literate_examples_header(s, repo_root, abs_src)
         if :script in doc.config[:builds] || :notebook in doc.config[:builds]
             # If we are building executable scripts/notebooks, add admonition at top of file
             # linking to examples
@@ -54,9 +55,11 @@ function add_documenter_editurl(content::String)
 end
 
 function add_literate_examples_header(content::String, repo_root, abs_src)
-    examplehowto = joinpath(SRC_DIR, "examples/example_howto.md")
-    @assert isfile(examplehowto)
-    path = relpath(examplehowto, abs_src)
+    #examplehowto = joinpath(SRC_DIR, "examples/example_howto.md")
+    #@assert isfile(examplehowto)
+    #path = relpath(examplehowto, abs_src)
+    # TODO
+    examplehowto = "docs.lyceum.ml/dev/examples/example_howto/"
     """
     #md # !!! note "Running examples locally"
     #md #     This example and more are also available as Julia scripts and Jupyter notebooks.
