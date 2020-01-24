@@ -1,7 +1,6 @@
 ```@cfg
 title = "Running Examples Locally"
-weight = -10
-hide = true
+weight = 0
 ```
 
 All examples can be found as Julia scripts and Jupyter notebooks in a

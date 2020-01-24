@@ -8,6 +8,14 @@ function preprocess(s::String, doc::Document; config::Dict = Dict())
     filename = Literate.filename(abs_src)
     relrepo_path = relpath(abs_src, repo_root)
 
+    s = replace(s, "@__FILE_URL__" => "@__REPO_ROOT_URL__/$(relrepo_path)")
+    s = replace(s, "@__FILE__" => relrepo_path)
+    s = replace(s, "@__EXAMPLES__" => PATHS.examples_tarfile)
+    s = replace(
+        s,
+        "@__EXAMPLES_README__" => read(joinpath(EXAMPLE_DIR, "README.md"), String),
+    )
+
     if doc.kind === :documenter
         s = parse_documenter(s).body
         s = add_documenter_title(s, doc.config[:title])
@@ -25,13 +33,6 @@ function preprocess(s::String, doc::Document; config::Dict = Dict())
     else
         error("Unknown document kind: $(doc.kind)")
     end
-    s = replace(s, "@__FILE_URL__" => "@__REPO_ROOT_URL__/$(relrepo_path)")
-    s = replace(s, "@__FILE__" => relrepo_path)
-    s = replace(s, "@__EXAMPLES__" => PATHS.examples_tarfile)
-    s = replace(
-        s,
-        "@__EXAMPLES_README__" => read(joinpath(EXAMPLE_DIR, "README.md"), String),
-    )
 
     s
 end
