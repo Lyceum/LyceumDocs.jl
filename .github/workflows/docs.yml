@@ -44,4 +44,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # For authentication with GitHub Actions token
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
           DISPLAY: ':99'
-        run: julia --project -e 'using LyceumDocs; LyceumDocs.make(skipliterate=true)'
+        run: julia --project -e 'using LyceumDocs; LyceumDocs.make(skipliterate=false)'
