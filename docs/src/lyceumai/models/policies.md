@@ -1,10 +1,5 @@
-```@cfg
-title = "Policies"
-weight = 10
-```
-
 ```@meta
-CurrentModule = LyceumDocs.LyceumAI
+CurrentModule = LyceumAI
 ```
 
 ## DiagGaussianPolicy

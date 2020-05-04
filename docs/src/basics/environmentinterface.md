@@ -1,10 +1,5 @@
-```@cfg
-title = "AbstractEnvironment"
-weight = 10
-```
-
 ```@meta
-CurrentModule = LyceumDocs.LyceumBase
+CurrentModule = LyceumBase
 ```
 
 ## Overview
@@ -21,8 +16,8 @@ required methods may have defaults.
   * `getstate!(state, env)`
   * `setstate!(env, state)`
 * Observation
-  * `obsspace(env)`
-  * `getobs!(obs, env)`
+  * `observationspace(env)`
+  * `getobservation!(obs, env)`
 * Action
   * `actionspace(env)`
   * `getaction!(action, env)`
@@ -30,9 +25,6 @@ required methods may have defaults.
 * Reward
   * `rewardspace(env)`
   * `getreward(env)`
-* Evaluation
-  * `evalspace(env)`
-  * `geteval(env)`
 * Simulation
   * `reset!(env)`
   * `randreset!(env)`
@@ -60,9 +52,9 @@ getstate
 ### Observation
 
 ```@docs
-obsspace
-getobs!
-getobs
+observationspace
+getobservation!
+getobservation
 ```
 
 ### Action
@@ -79,13 +71,6 @@ getaction
 ```@docs
 rewardspace
 getreward
-```
-
-### Evaluation
-
-```@docs
-evalspace
-geteval
 ```
 
 ### Simulation

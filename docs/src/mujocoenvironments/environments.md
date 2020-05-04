@@ -1,10 +1,5 @@
-```@cfg
-title = "Environments"
-weight = 10
-```
-
 ```@meta
-CurrentModule = LyceumDocs.LyceumMuJoCo
+CurrentModule = LyceumMuJoCo
 ```
 
 LyceumMuJoCo comes with a variety of environments:
