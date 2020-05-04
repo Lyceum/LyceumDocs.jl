@@ -5,6 +5,8 @@ using LyceumBase
 using LyceumMuJoCo
 using LyceumAI
 
+const AbsStr = AbstractString
+
 const REPO_ROOT = joinpath(@__DIR__, "..")
 const DOCS = @__DIR__
 const EXAMPLES = joinpath(REPO_ROOT, "examples")
@@ -33,12 +35,15 @@ PAGES = [
         "Models" => [
             "Policies" => "lyceumai/models/policies.md",
         ],
-    ]
+    ],
+    "Examples" => [
+        "examples/creating_a_mujoco_environment.jl",
+        "examples/learning_a_control_policy.jl",
+        "examples/using_the_visualizer.jl",
+        hide("examples/running_the_examples.md"
+    ],
 ]
 
-EXAMPLES = [
-    "Creating a MuJoCo Environment" => "humanoid.jl"
-]
 
 function make(;
     clean::Bool = false,
@@ -59,8 +64,8 @@ function make(;
     if fast
         config["codefence"] = "```julia" => "```"
     end
-
-    preprocess(PAGES)
+    pages = process(PAGES)
+    display(pages)
 
     makedocs(;
         modules = [
@@ -73,7 +78,7 @@ function make(;
             prettyurls = !islocalbuild(),
             assets = ["assets/custom.css"],
         ),
-        pages = PAGES, # TODO examples
+        pages = pages, # TODO examples
         sitename = "Lyceum",
         authors = "Colin Summers",
         strict = false, #!islocalbuild(),  # TODO
