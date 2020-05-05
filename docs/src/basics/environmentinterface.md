@@ -1,3 +1,5 @@
+# Environment Interface
+
 ```@meta
 CurrentModule = LyceumBase
 ```

@@ -1,3 +1,5 @@
+# Environments
+
 ```@meta
 CurrentModule = LyceumMuJoCo
 ```

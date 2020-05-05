@@ -1,8 +1,9 @@
-using Documenter
+using Documenter: Documenter, makedocs
 using Literate
 
 using LyceumBase
 using LyceumMuJoCo
+using LyceumMuJoCoViz
 using LyceumAI
 
 const AbsStr = AbstractString
@@ -19,28 +20,29 @@ include("util.jl")
 PAGES = [
    "Home" => "index.md",
    "Basics" => [
-       "Environment Interface" => "basics/environmentinterface.md"
+       "basics/environmentinterface.md",
     ],
     "MuJoCo Environments" => [
-        "Overview" => "mujocoenvironments/overview.md",
-        "Environments" => "mujocoenvironments/environments.md",
-        "Visualization" => "mujocoenvironments/visualization.md",
+        "mujocoenvironments/overview.md",
+        "mujocoenvironments/environments.md",
+        "mujocoenvironments/visualization.md",
     ],
     "LyceumAI" => [
-        "Overview" => "lyceumai/overview.md",
+        "lyceumai/overview.md",
         "Algorithms" => [
-            "Model Predictive Path Integral Control" => "lyceumai/algorithms/mppi.md",
-            "Natural Policy Gradient" => "lyceumai/algorithms/naturalpolicygradient.md",
+            "lyceumai/algorithms/mppi.md",
+            "lyceumai/algorithms/naturalpolicygradient.md",
         ],
         "Models" => [
-            "Policies" => "lyceumai/models/policies.md",
+            "lyceumai/models/policies.md",
         ],
     ],
     "Examples" => [
+        "examples/running_the_examples.md",
         "examples/creating_a_mujoco_environment.jl",
         "examples/learning_a_control_policy.jl",
         "examples/using_the_visualizer.jl",
-        hide("examples/running_the_examples.md"
+        #"examples/running_the_examples.md"
     ],
 ]
 
@@ -64,7 +66,7 @@ function make(;
     if fast
         config["codefence"] = "```julia" => "```"
     end
-    pages = process(PAGES)
+    pages = process(PAGES, literate_config)
     display(pages)
 
     makedocs(;
