@@ -1,6 +1,6 @@
 # Lyceum
 
-![](https://github.com/Lyceum/LyceumDocs.jl/workflows/CI/badge.svg)
+[![](https://github.com/Lyceum/LyceumDocs.jl/workflows/CI/badge.svg)](https://github.com/Lyceum/LyceumDocs.jl/actions)
 [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://lyceum.github.io/LyceumDocs.jl/dev/)
 
 LyceumDocs.jl is part of the Lyceum eco-system and [contains the documentation](https://lyceum.github.io/LyceumDocs.jl/dev/) for several of the packages it is comprised of, alongside tutorials. To contribute, see below.
