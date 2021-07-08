@@ -1,10 +1,5 @@
-#cfg title = "Using the Visualizer"
-#cfg weight = 13
-#cfg active = true
-#cfg deps = ["visualize.png"]
+# # Using the Visualizer
 
-
-#md # ## Overview
 # In this example, we walk through how to use LyceumMuJoCoViz.jl to playback saved
 # trajectories and interact with a saved policy in real time using
 # the policy we learned in the "Learning a control policy" example.
@@ -65,3 +60,4 @@ end
 
 #md # You should see the following:
 #md # ![visualizer](visualize.png)
+```

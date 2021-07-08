@@ -1,7 +1,4 @@
-```@cfg
-title = "Running Examples Locally"
-weight = 0
-```
+# Running the Examples
 
 All examples can be found as Julia scripts and Jupyter notebooks in a
 self-contained Julia project which is available here:

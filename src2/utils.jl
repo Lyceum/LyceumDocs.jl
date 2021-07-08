@@ -141,5 +141,3 @@ function execute_block(block::String)
     end
     m
 end
-
-islocalbuild() = get(ENV, "GITHUB_ACTIONS", nothing) != "true"

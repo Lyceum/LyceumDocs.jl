@@ -1,9 +1,4 @@
-#cfg title = "Creating a MuJoCo Environment"
-#cfg weight = 11
-#cfg active = true
-#cfg deps = ["humanoid.xml"]
-
-# ## Overview
+# # Creating a MuJoCo Environment
 
 # Using LyceumMuJoCo, we will create the environment for a Humanoid "get-up" task
 # that mostly relies on the defaults of LyceumBase and LyceumMuJoCo to
@@ -20,8 +15,9 @@
 # First we grab our dependencies of the Lyceum ecosystem and other helpful packages.
 using LinearAlgebra, Random, Statistics
 using Plots, UnicodePlots, JLSO
-using LyceumBase, LyceumBase.Tools, LyceumAI, LyceumMuJoCo, MuJoCo, UniversalLogger, Shapes
+using LyceumBase, LyceumAI, LyceumMuJoCo, MuJoCo, Shapes
 
+# **TODO** example of MJSim vs jlData/jlModel
 
 #md # ### Humanoid Type
 
@@ -31,8 +27,8 @@ using LyceumBase, LyceumBase.Tools, LyceumAI, LyceumMuJoCo, MuJoCo, UniversalLog
 # example only wraps around the underlying simulator (the `sim::MJSim` field of `Humanoid`,
 # referred to hereafter as just `sim`). The functions of the LyceumBase API will then
 # dispatch on this struct through Julia's [multiple dispatch](https://en.wikipedia.org/wiki/Multiple_dispatch)
-# mechanism. When an algorithm calls a function such as `getobs!(obs, env)`, Julia will select from
-# all functions with that name depending on `typeof(obs)` and `typeof(env)`.
+# mechanism. As an example, when an algorithm calls [`getobservation!(obs, env)`](@ref LycuemMuJoCo.getobservation!],
+# Julia will select the method that best fits `typeof(obs)` and `typeof(env)`.
 struct Humanoid{S<:MJSim} <: AbstractMuJoCoEnvironment
     sim::S
 end
@@ -40,7 +36,7 @@ end
 LyceumMuJoCo.getsim(env::Humanoid) = env.sim #src (needs to be here for below example to work)
 
 # `Humanoid` (and all subtypes of `AbstractEnvironment`) are designed to be used in a single
-# threaded context. To use `Humanoid` in a multi-threaded context, one could simply create
+# threaded context. To use `Humanoid` in a multi-threaded context, one would simply create
 # `Threads.nthreads()` instances of `Humanoid`:
 modelpath = joinpath(@__DIR__, "humanoid.xml")
 envs = [Humanoid(MJSim(modelpath, skip = 2)) for i = 1:Threads.nthreads()]
@@ -51,26 +47,32 @@ end
 
 # As `Humanoid` only ever uses its internal `jlModel` (found at `sim.m`) in a read-only
 # fashion, we can make a performance optimization by sharing a single instance of `jlModel`
-# across each thread, resulting in improved cache efficiency. `LyceumMuJoCo.tconstruct`,
-# short for "thread construct", helps us to do just that by providing a common interface
-# for defining "thread-aware" constructors. Below, we make a call to
-# `tconstruct(MJSim, n, modelpath, skip = 2)` which will construct `n` instances of `MJSim`
-# constructed from `modelpath` and with a `skip` of 2, all sharing the exact same `jlModel`
-# instance, and return `n` instances of `Humanoid`. All of the environments provided by
-# LyceumMuJoCo feature similar definitions of `tconstruct` as found below.
-Humanoid() = first(tconstruct(Humanoid, 1))
+# across each thread, resulting in improved cache efficiency:
+m = jlModel(modelpath)
+envs = [MJSim(m, jlData(m)) for i = 1:Threads.nthreads()]
+
+# To facilitate this process, the function `LyceumBase.tconstruct`[@raf], short for
+# "thread construct" provides a common interface for defining "thread-aware" constructors:
+#md ```@docs
+#md LyceumBase.tconstruct
+#md ```
+#!md # tconstruct(T, n, args...; kwargs...)
+# The default definition simply returns `[T(args...; kwargs...) for i=1:n`, but we can
+# overload that definition for our `Humanoid` to take advantage of the above optimization:
 function LyceumMuJoCo.tconstruct(::Type{Humanoid}, n::Integer)
     modelpath = joinpath(@__DIR__, "humanoid.xml")
-    return Tuple(Humanoid(s) for s in tconstruct(MJSim, n, modelpath, skip = 2))
+    return [Humanoid(s) for s in tconstruct(MJSim, n, modelpath, skip = 2)]
 end
+# To avoid repeating ourselves, we can also define the zero-argument construct for `Humanoid`
+# to just call `tconstruct`:
+Humanoid() = first(tconstruct(Humanoid, 1))
 
-# We can then use `tconstruct` as follows:
+# We can now repeat the above multi-threading example using our new definition for `tconstruct`:
 envs = tconstruct(Humanoid, Threads.nthreads())
 Threads.@threads for i = 1:Threads.nthreads()
     thread_env = envs[Threads.threadid()]
     step!(thread_env)
 end
-
 
 #md # ### Utilities
 
@@ -149,15 +151,6 @@ function LyceumMuJoCo.getreward(state, action, obs, env::Humanoid)
     return reward
 end
 
-# Finally, we can specify an evaluation function. The difference between `geteval` and
-# `getreward` is that `getreward` is the shaped reward our algorithm is optimizing for,
-# while `geteval` lets us track a useful value for monitoring performance, such as height.
-# Plotting this eval function will show the agent's height over time and is very useful
-# for reviewing actual desired behavior, regardless of the reward achieved, as it can be
-# used to diagnose reward specification problems.
-function LyceumMuJoCo.geteval(state, action, obs, env::Humanoid)
-    return _getheight(statespace(env)(state), env)
-end
 
 #md # ### Running Experiments
 
@@ -214,7 +207,7 @@ end
 
 #md # ### Checking Results
 
-seed_threadrngs!(1) #src
+tseed!(1) #src
 
 # The MPPI algorithm, and any that you develop, can and should use plotting tools
 # to track progress as they go.
@@ -237,5 +230,5 @@ plot(
 )
 
 using Test #src
-@test abs(geteval(env)) > 1.2 #src
+# **TODO** @test abs(geteval(env)) > 1.2
 @test data["rewards"] == traj.rewards #src

@@ -1,10 +1,7 @@
-```@cfg
-title = "Natural Policy Gradient"
-weight = 10
-```
+# Natural Policy Gradient
 
 ```@meta
-CurrentModule = LyceumDocs.LyceumAI
+CurrentModule = LyceumAI
 ```
 
 ```@docs

@@ -1,10 +1,7 @@
-```@cfg
-title = "LyceumMuJoCo"
-weight = 0
-```
+# Overview
 
 ```@meta
-CurrentModule = LyceumDocs.LyceumMuJoCo
+CurrentModule = LyceumMuJoCo
 ```
 
 LyceumMuJoCo uses [MuJoCo.jl](https://github.com/Lyceum/MuJoCo.jl) to provide the following:
@@ -43,9 +40,9 @@ getsim
 MJSim
 setstate!(::MJSim, ::RealVec)
 getstate!(::RealVec, ::MJSim)
-obsspace(::MJSim)
-getobs!(::RealVec, ::MJSim)
-getobs(::MJSim)
+observationspace(::MJSim)
+getobservation!(::RealVec, ::MJSim)
+getobservation(::MJSim)
 zeroctrl!(::MJSim)
 zerofullctrl!(::MJSim)
 forward!(::MJSim)

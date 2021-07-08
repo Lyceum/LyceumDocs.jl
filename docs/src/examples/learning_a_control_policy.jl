@@ -1,8 +1,4 @@
-#cfg title = "Learning a Control Policy"
-#cfg weight = 12
-#cfg active = true
-
-#md # ## Overview
+# # Learning a Control Policy
 
 # In this example we walk through the process of setting up an experiment
 # that runs [Natural Policy Gradient](https://papers.nips.cc/paper/2073-a-natural-policy-gradient.pdf)

@@ -1,10 +1,7 @@
-```@cfg
-title = "LyceumMuJoCoViz"
-weight = 0
-```
+# Visualization
 
 ```@meta
-CurrentModule = LyceumDocs.LyceumMuJoCoViz
+CurrentModule = LyceumMuJoCoViz
 ```
 
 ## Overview
@@ -23,7 +20,9 @@ All of these commands are controlled via keyboard shortcuts which are displayed 
 window when the visualizer is launched:
 
 ```@raw html
-<img class="center" src="../examples/visualize.png" width="75%"/>
+<figure class="image is-16by9">
+<iframe class="has-ratio" width="560" height="315" src="https://www.youtube.com/embed/gSpx6bqmk3w" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen />
+</div>
 ```
 
 ## API
@@ -31,5 +30,3 @@ window when the visualizer is launched:
 ```@docs
 visualize
 ```
-
-

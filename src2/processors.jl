@@ -41,17 +41,6 @@ function preprocess(s::String, doc::Document; config::Dict = Dict())
     s
 end
 
-function add_documenter_editurl(content::String)
-    if occursin("EditURL", content)
-        print(content)
-        error("$path already contains an EditURL")
-    end
-    """
-    ```@meta
-    EditURL = "@__FILE_URL__"
-    ```
-    """ * content
-end
 
 function add_literate_examples_header(content::String, repo_root, abs_src)
     #examplehowto = joinpath(SRC_DIR, "examples/example_howto.md")
