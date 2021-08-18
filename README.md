@@ -5,6 +5,10 @@
 
 LyceumDocs.jl is part of the Lyceum eco-system and [contains the documentation](https://lyceum.github.io/LyceumDocs.jl/dev/) for several of the packages it is comprised of, alongside tutorials. To contribute, see below.
 
+# UPDATE
+
+These docs are tremendously out of date. Instead you may find working code snippets at the following repository for a MuJoCo model based around the Franka Emika robot arm: [FrankaTest](https://github.com/klowrey/FrankaTest)
+
 
 ## Contributing
 
